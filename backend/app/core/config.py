@@ -1,6 +1,6 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import Field, field_validator
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "SatQuery AI Backend Engine"
@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     LITELLM_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     ALLOW_MOCK_FALLBACK: bool = True
+
+    # Public Planetary Computer STAC service. Asset URLs are signed anonymously at request time.
+    STAC_API_URL: str = "https://planetarycomputer.microsoft.com/api/stac/v1"
+    STAC_COLLECTION: str = "sentinel-2-l2a"
+    STAC_SEARCH_LIMIT: int = 20
+    RASTER_MAX_DIMENSION: int = 768
     
     # Storage & Database Paths
     BASE_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -36,6 +42,13 @@ class Settings(BaseSettings):
     FAISS_MAP_PATH: str = os.path.abspath(os.path.join(BASE_DIR, "satquery_faiss_map.json"))
 
     model_config = SettingsConfigDict(case_sensitive=True)
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def normalize_debug(cls, value):
+        if isinstance(value, str) and value.strip().lower() in {"release", "prod", "production"}:
+            return False
+        return value
 
 settings = Settings()
 

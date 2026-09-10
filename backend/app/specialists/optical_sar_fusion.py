@@ -6,6 +6,7 @@ from backend.app.domain.evidence import EvidenceCollector
 from backend.app.geospatial.sar_ops import SAROps
 from backend.app.satellite.base import SatelliteProvider
 from backend.app.satellite.mock_provider import MockSatelliteProvider
+from backend.app.core.exceptions import SatelliteDataUnavailableError
 
 class OpticalSARFusionSpecialist(BaseSpecialist):
     def __init__(self):
@@ -18,6 +19,11 @@ class OpticalSARFusionSpecialist(BaseSpecialist):
         provider: Optional[SatelliteProvider] = None,
         scene_id: str = "SCENE-ASSAM-SAR-2024"
     ) -> Tuple[str, List[GroundingMask], Optional[ChangeMapResult], Optional[SpectralIndices]]:
+        if provider and provider.provider_name != "SIH Mock Satellite Provider":
+            raise SatelliteDataUnavailableError(
+                "Live Sentinel-1 GRD acquisition is not configured yet. Optical-SAR fusion will be enabled after the "
+                "Sentinel-1 provider and radiometric terrain-correction pipeline are deployed."
+            )
         prov = provider or MockSatelliteProvider()
         
         # Retrieve SAR VV amplitude via SatelliteProvider abstraction

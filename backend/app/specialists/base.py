@@ -14,7 +14,8 @@ class BaseSpecialist(ABC):
         request: AnalysisRequest,
         evidence_collector: EvidenceCollector,
         provider: Optional[SatelliteProvider] = None,
-        scene_id: str = "SCENE-KOLKATA-2024"
+        scene_id: str = "",
+        comparison_scene_id: Optional[str] = None,
     ) -> Tuple[str, List[GroundingMask], Optional[ChangeMapResult], Optional[SpectralIndices]]:
         """
         Executes the specialist analysis logic using real or mock provider band data.

@@ -4,6 +4,7 @@ from backend.app.domain.models import AnalysisRequest, GroundingMask, ChangeMapR
 from backend.app.domain.evidence import EvidenceCollector
 from backend.app.geospatial.bbox import SpatialBBoxOps
 from backend.app.satellite.base import SatelliteProvider
+from backend.app.core.exceptions import SatelliteDataUnavailableError
 
 class GroundingSpecialist(BaseSpecialist):
     def __init__(self):
@@ -16,6 +17,10 @@ class GroundingSpecialist(BaseSpecialist):
         provider: Optional[SatelliteProvider] = None,
         scene_id: str = "SCENE-KOLKATA-2024"
     ) -> Tuple[str, List[GroundingMask], Optional[ChangeMapResult], Optional[SpectralIndices]]:
+        raise SatelliteDataUnavailableError(
+            "Generic object segmentation is disabled in live mode. Sentinel-2 10 m imagery cannot support the demo's "
+            "aircraft/runway claims without a real segmentation model and appropriate high-resolution imagery."
+        )
         # Define deterministic spatial bounding boxes matching query intent
         query_lower = request.query.lower()
         
