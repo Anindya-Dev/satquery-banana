@@ -68,3 +68,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Internal Documentation & Team Handoff Guides (Kept local only)
+docs/
+SatQuery-AI-Architecture.md
+SatQuery-AI-Engineering-Hardening-Report.md
+context.md
