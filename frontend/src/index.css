@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-obsidian: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: #ffffff;
+  --border-glass: rgba(0, 0, 0, 0.08);
+  --border-amber-glow: rgba(234, 88, 12, 0.3);
+  
+  --amber-primary: #ea580c;
+  --amber-light: #f97316;
+  --peach-warm: #f97316;
+  --copper-dark: #c2410c;
+  
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  
+  --success-green: #059669;
+  --warning-amber: #d97706;
+  --danger-red: #dc2626;
+  --info-blue: #2563eb;
+  
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f8fafc;
+  color: var(--text-main);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(249, 115, 22, 0.07) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(234, 88, 12, 0.04) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Custom Scrollbars for light mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--amber-primary);
+}
+
+/* Light Glassmorphism utility classes */
+.glass-panel {
+  background: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+.glass-panel-amber {
+  background: #fff7ed;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(251, 146, 60, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px -5px rgba(249, 115, 22, 0.08);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+}
+
+/* Hackathon Pill Buttons */
+.btn-pill-primary {
+  background: #0f172a;
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+}
+
+.btn-pill-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+  background: #1e293b;
+}
+
+.btn-pill-glass {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 12px 22px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
+}
+
+.btn-pill-glass:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
+
+.btn-amber-glow {
+  background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  color: #ffffff;
+  font-weight: 700;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 20px rgba(234, 88, 12, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-amber-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(234, 88, 12, 0.35);
+}
+
+/* Hackathon Section Tags */
+.section-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c2410c;
+  background: #ffedd5;
+  border: 1px solid #fed7aa;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  display: inline-block;
+  margin-bottom: 14px;
+}
+
+/* Typography */
+.text-peach-glow {
+  color: #ea580c;
+}
+
+.heading-font {
+  font-family: var(--font-heading);
+}
+
+.mono-font {
+  font-family: var(--font-mono);
+}
+
+/* Split Image Slider Handle */
+.slider-handle {
+  width: 3px;
+  background: #0f172a;
+  box-shadow: 0 0 10px rgba(15, 23, 42, 0.5), 0 0 16px var(--amber-primary);
+  cursor: ew-resize;
+}
