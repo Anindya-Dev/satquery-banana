@@ -42,6 +42,12 @@ class OpenAIProvider(VisionLanguageProvider):
     ) -> Dict[str, Any]:
         api_key = settings.OPENAI_API_KEY
         if not api_key:
+            if not settings.ALLOW_MOCK_FALLBACK:
+                return {
+                    "summary": deterministic_summary,
+                    "claims": [{"claim": deterministic_summary, "evidence_ids": [ev.evidence_id for ev in evidence_chain]}],
+                    "insufficient_evidence": False,
+                }
             logger.info("OPENAI_API_KEY not configured. Falling back to MockVLMProvider.")
             return self.mock_fallback.generate_structured_interpretation(request, evidence_chain, deterministic_summary)
 
@@ -73,5 +79,7 @@ class OpenAIProvider(VisionLanguageProvider):
                 "insufficient_evidence": False
             }
         except Exception as e:
+            if not settings.ALLOW_MOCK_FALLBACK:
+                raise
             logger.warning(f"LiteLLM call failed ({str(e)}). Executing mock fallback.")
             return self.mock_fallback.generate_structured_interpretation(request, evidence_chain, deterministic_summary)

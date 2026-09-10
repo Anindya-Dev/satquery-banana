@@ -35,6 +35,8 @@ class ImageMetadata(BaseModel):
     height: int = Field(default=1024)
     bbox: List[float] = Field(default=[-180.0, -90.0, 180.0, 90.0], description="[min_lon, min_lat, max_lon, max_lat]")
     bands_available: List[str] = Field(default_factory=lambda: ["B2", "B3", "B4", "B8"])
+    collection: Optional[str] = Field(default=None, description="STAC collection identifier")
+    source_uri: Optional[str] = Field(default=None, description="Canonical STAC item URL")
 
 class ImagePairMetadata(BaseModel):
     t1: ImageMetadata
@@ -100,6 +102,9 @@ class AnalysisRequest(BaseModel):
     task_type: Optional[TaskType] = Field(default=TaskType.AUTO_CLASSIFIED)
     image_url: Optional[str] = Field(default=None, description="Single raster image input URL/path")
     image_pair_urls: Optional[List[str]] = Field(default=None, description="Pair of raster image inputs for bi-temporal analysis")
+    bbox: Optional[List[float]] = Field(default=None, description="Optional AOI as [min_lon, min_lat, max_lon, max_lat] in EPSG:4326")
+    start_date: Optional[str] = Field(default=None, description="Inclusive ISO-8601 acquisition date/time")
+    end_date: Optional[str] = Field(default=None, description="Inclusive ISO-8601 acquisition date/time")
     use_sar_despeckle: bool = Field(default=True)
     confidence_threshold: float = Field(default=0.70)
 
@@ -117,4 +122,7 @@ class AnalysisResult(BaseModel):
     grounding_masks: List[GroundingMask] = Field(default_factory=list)
     change_map: Optional[ChangeMapResult] = None
     spectral_indices: Optional[SpectralIndices] = None
+    image_primary_url: Optional[str] = Field(default=None, description="Rendered RGB preview for the selected primary live scene")
+    image_secondary_url: Optional[str] = Field(default=None, description="Rendered RGB preview for the comparison scene")
+    scene_dates: List[str] = Field(default_factory=list, description="Acquisition dates used in the analysis")
     processing_time_ms: float = Field(default=0.0)

@@ -89,6 +89,14 @@ class MetadataDB:
                 )
             """)
 
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS response_cache (
+                    cache_key TEXT PRIMARY KEY,
+                    result_json TEXT NOT NULL,
+                    expires_at REAL NOT NULL
+                )
+            """)
+
             # Seed default demo tiles if empty
             cursor.execute("SELECT COUNT(*) FROM tiles")
             if cursor.fetchone()[0] == 0:
@@ -174,5 +182,19 @@ class MetadataDB:
             if res["result_json"]:
                 res["result"] = json.loads(res["result_json"])
             return res
+
+    def get_cached_response(self, cache_key: str, now: float) -> Optional[Dict[str, Any]]:
+        with self._get_connection() as conn:
+            row = conn.execute("SELECT result_json FROM response_cache WHERE cache_key = ? AND expires_at > ?", (cache_key, now)).fetchone()
+            if row:
+                return json.loads(row["result_json"])
+            conn.execute("DELETE FROM response_cache WHERE expires_at <= ?", (now,))
+            conn.commit()
+        return None
+
+    def cache_response(self, cache_key: str, result: Dict[str, Any], expires_at: float):
+        with self._get_connection() as conn:
+            conn.execute("INSERT OR REPLACE INTO response_cache VALUES (?, ?, ?)", (cache_key, json.dumps(result), expires_at))
+            conn.commit()
 
 metadata_db = MetadataDB()

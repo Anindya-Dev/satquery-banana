@@ -1,68 +1,77 @@
-from typing import Tuple, List, Optional
-from backend.app.specialists.base import BaseSpecialist
-from backend.app.domain.models import AnalysisRequest, GroundingMask, ChangeMapResult, SpectralIndices
+from typing import List, Optional, Tuple
+
+import cv2
+import numpy as np
+
+from backend.app.core.exceptions import SatelliteDataUnavailableError
 from backend.app.domain.evidence import EvidenceCollector
+from backend.app.domain.models import AnalysisRequest, ChangeMapResult, GroundingMask, SpectralIndices
 from backend.app.geospatial.bbox import SpatialBBoxOps
+from backend.app.geospatial.raster_ops import RasterOps
 from backend.app.satellite.base import SatelliteProvider
+from backend.app.specialists.base import BaseSpecialist
+
 
 class GroundingSpecialist(BaseSpecialist):
+    """Segments supported land-cover targets from measured Sentinel-2 spectral indices."""
+
     def __init__(self):
-        super().__init__(name="Visual Grounding & Segmentation Specialist")
+        super().__init__(name="Spectral Segmentation Specialist")
 
     def execute(
         self,
         request: AnalysisRequest,
         evidence_collector: EvidenceCollector,
         provider: Optional[SatelliteProvider] = None,
-        scene_id: str = "SCENE-KOLKATA-2024"
+        scene_id: str = "",
     ) -> Tuple[str, List[GroundingMask], Optional[ChangeMapResult], Optional[SpectralIndices]]:
-        # Define deterministic spatial bounding boxes matching query intent
-        query_lower = request.query.lower()
-        
-        masks = []
-        if "aircraft" in query_lower or "runway" in query_lower or "airport" in query_lower:
-            bbox_coords = [88.441, 22.648, 88.455, 22.660]
-            geojson = SpatialBBoxOps.bbox_to_geojson(bbox_coords)
-            area = SpatialBBoxOps.calculate_area_sq_km(bbox_coords) * 1e6 # in sq m
-            masks.append(GroundingMask(
-                id="MASK-AIRPORT-01",
-                label="Commercial Aircraft & Runway Complex",
-                confidence=0.96,
-                bbox=bbox_coords,
-                polygon_geojson=geojson,
-                area_sq_m=area
-            ))
-            evidence_collector.add(
-                evidence_type="SAMGrounding",
-                layer="Segment Anything Model (SAM-Geo)",
-                description=f"Zero-shot visual grounding isolated target area of {area:.0f} m².",
-                metric_name="Grounded_Area",
-                metric_value=area,
-                unit="sq_m",
-                bbox=bbox_coords
-            )
-            answer = f"Segmented 1 primary airport infrastructure zone spanning {area:.0f} m² with 96% visual grounding confidence."
-        else:
-            bbox_coords = [88.350, 22.560, 88.375, 22.585]
-            geojson = SpatialBBoxOps.bbox_to_geojson(bbox_coords)
-            area = SpatialBBoxOps.calculate_area_sq_km(bbox_coords) * 1e6
-            masks.append(GroundingMask(
-                id="MASK-TARGET-01",
-                label="Identified Ground Feature",
-                confidence=0.94,
-                bbox=bbox_coords,
-                polygon_geojson=geojson,
-                area_sq_m=area
-            ))
-            evidence_collector.add(
-                evidence_type="SAMGrounding",
-                layer="Segment Anything Model (SAM-Geo)",
-                description=f"Visual grounding zero-shot polygon bounded area of {area:.0f} m².",
-                metric_name="Grounded_Area",
-                metric_value=area,
-                unit="sq_m",
-                bbox=bbox_coords
-            )
-            answer = f"Successfully grounded object boundary for '{request.query}' covering {area:.0f} m²."
+        if provider is None or not request.bbox:
+            raise SatelliteDataUnavailableError("Live segmentation requires a selected scene and an analysis area.")
 
-        return answer, masks, None, None
+        query = request.query.lower()
+        if any(word in query for word in ("water", "river", "lake", "flood")):
+            index = RasterOps.calculate_ndwi(provider.get_band_data(scene_id, "B3"), provider.get_band_data(scene_id, "B8"))
+            binary = (index > 0.05).astype(np.uint8)
+            label, index_name = "Open water", "NDWI"
+        elif any(word in query for word in ("vegetation", "forest", "crop", "canopy")):
+            index = RasterOps.calculate_ndvi(provider.get_band_data(scene_id, "B8"), provider.get_band_data(scene_id, "B4"))
+            binary = (index > 0.30).astype(np.uint8)
+            label, index_name = "Vegetation", "NDVI"
+        else:
+            raise SatelliteDataUnavailableError(
+                "Live segmentation supports water and vegetation from Sentinel-2 spectral masks. "
+                "Arbitrary objects require high-resolution imagery and a dedicated model."
+            )
+
+        count, _, stats, _ = cv2.connectedComponentsWithStats(binary, connectivity=8)
+        if count <= 1:
+            raise SatelliteDataUnavailableError(f"No {label.lower()} component met the live {index_name} threshold.")
+        component = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+        x, y, width, height, pixels = stats[component]
+        rows, cols = binary.shape
+        xmin, ymin, xmax, ymax = request.bbox
+        component_bbox = [
+            xmin + x / cols * (xmax - xmin),
+            ymax - (y + height) / rows * (ymax - ymin),
+            xmin + (x + width) / cols * (xmax - xmin),
+            ymax - y / rows * (ymax - ymin),
+        ]
+        area_sq_m = SpatialBBoxOps.calculate_area_sq_km(request.bbox) * 1_000_000 * pixels / binary.size
+        mask = GroundingMask(
+            id="MASK-SPECTRAL-01",
+            label=f"{label} spectral mask",
+            confidence=float(round(min(0.99, 0.5 + pixels / binary.size), 2)),
+            bbox=component_bbox,
+            polygon_geojson=SpatialBBoxOps.bbox_to_geojson(component_bbox),
+            area_sq_m=float(round(area_sq_m, 2)),
+        )
+        evidence_collector.add(
+            evidence_type="SpectralSegmentation",
+            layer=f"Sentinel-2 {index_name} threshold mask",
+            description=f"Largest connected {label.lower()} component extracted from live raster pixels.",
+            metric_name="Segmented_Area",
+            metric_value=float(round(area_sq_m, 2)),
+            unit="sq_m",
+            bbox=component_bbox,
+        )
+        return f"Segmented the largest {label.lower()} component covering {area_sq_m:.0f} sq m from a live {index_name} mask.", [mask], None, None
