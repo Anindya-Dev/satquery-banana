@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Eye, EyeOff, Layers, Sliders, Maximize2, RefreshCw, ZoomIn, MapPin, Activity, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function VisualCanvas({ scenario }) {
@@ -6,6 +6,22 @@ export default function VisualCanvas({ scenario }) {
   const [activeLayer, setActiveLayer] = useState('RGB');
   const [showMaskOverlay, setShowMaskOverlay] = useState(true);
   const [sarDespeckle, setSarDespeckle] = useState(true);
+
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const updateSize = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [scenario]);
 
   if (!scenario) return null;
 
@@ -99,41 +115,45 @@ export default function VisualCanvas({ scenario }) {
       </div>
 
       {/* Main Interactive Visual Canvas */}
-      <div className="relative flex-1 min-h-[380px] sm:min-h-[440px] rounded-xl overflow-hidden bg-slate-950 border border-white/10 group">
+      <div 
+        ref={containerRef}
+        className="relative flex-1 min-h-[380px] sm:min-h-[440px] rounded-xl overflow-hidden bg-slate-950 border border-white/10 group"
+      >
         
         {/* 1. BI-TEMPORAL SWIPE SLIDER MODE */}
         {isBiTemporal ? (
-          <div className="relative w-full h-full select-none overflow-hidden">
-            {/* T2 Image (After / Right) */}
+          <div className="relative w-full h-full select-none overflow-hidden group/slider">
+            
+            {/* T2 Image (After / Right) - Base Layer */}
             <img 
               src={scenario.imageSecondary} 
               alt="T2 Satellite Scene" 
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             />
-            <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-amber-300">
+            <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-amber-300 pointer-events-none">
               T2: 2024-09-10 (After Inundation)
             </div>
 
-            {/* T1 Image (Before / Left) clipped by sliderPos */}
+            {/* T1 Image (Before / Left) - Overflow Clipped Wrapper */}
             <div 
-              className="absolute inset-0 overflow-hidden"
+              className="absolute top-0 left-0 bottom-0 overflow-hidden z-10 pointer-events-none"
               style={{ width: `${sliderPos}%` }}
             >
               <img 
                 src={scenario.imagePrimary} 
                 alt="T1 Satellite Scene" 
-                className="absolute inset-0 w-full h-full object-cover max-w-none"
-                style={{ width: '100%', height: '100%' }}
+                className="absolute top-0 left-0 h-full max-w-none object-cover"
+                style={{ width: containerWidth ? `${containerWidth}px` : '100%' }}
               />
-              <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-slate-200">
+              <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-slate-200 pointer-events-none whitespace-nowrap">
                 T1: 2023-09-10 (Baseline)
               </div>
             </div>
 
             {/* Change Detection Red Overlay Heatmap */}
             {showMaskOverlay && scenario.changeMap && (
-              <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-65 bg-gradient-to-tr from-red-600/40 via-transparent to-amber-500/20">
-                <div className="absolute bottom-4 left-4 p-2.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-xs font-mono text-red-300">
+              <div className="absolute inset-0 pointer-events-none z-10 mix-blend-screen opacity-65 bg-gradient-to-tr from-red-600/40 via-transparent to-amber-500/20">
+                <div className="absolute bottom-14 left-4 p-2.5 rounded-lg bg-slate-950/90 border border-red-500/40 text-xs font-mono text-red-300">
                   <p className="font-bold flex items-center gap-1.5">
                     <Activity className="w-3.5 h-3.5 text-red-400" />
                     Detected Inundation: {scenario.changeMap.changedAreaKm2} km² ({scenario.changeMap.changeFraction})
@@ -145,21 +165,24 @@ export default function VisualCanvas({ scenario }) {
               </div>
             )}
 
-            {/* Interactive Slider Bar */}
+            {/* Full-Canvas Interactive Drag Input */}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={sliderPos}
+              onChange={(e) => setSliderPos(Number(e.target.value))}
+              className="absolute inset-0 w-full h-full opacity-0 z-30 cursor-ew-resize m-0 p-0"
+            />
+
+            {/* Visual Divider Line & Center Handle Knob */}
             <div 
-              className="absolute top-0 bottom-0 z-20 slider-handle flex items-center justify-center"
+              className="absolute top-0 bottom-0 z-20 pointer-events-none"
               style={{ left: `${sliderPos}%` }}
             >
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={sliderPos}
-                onChange={(e) => setSliderPos(Number(e.target.value))}
-                className="absolute w-full h-full opacity-0 cursor-ew-resize"
-              />
-              <div className="w-7 h-7 rounded-full bg-amber-500 border-2 border-white shadow-xl flex items-center justify-center text-slate-950">
-                <Sliders className="w-3.5 h-3.5" />
+              <div className="w-0.5 h-full bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.9)] -ml-[1px]" />
+              <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-amber-500 border-2 border-white shadow-2xl flex items-center justify-center text-slate-950 group-hover/slider:scale-110 transition-transform">
+                <Sliders className="w-4 h-4" />
               </div>
             </div>
           </div>
@@ -209,15 +232,14 @@ export default function VisualCanvas({ scenario }) {
               }`}
             />
             
-            {/* Active Spectral Filter Tint Label */}
-            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-amber-300">
+            {/* Active Spectral Layer Label */}
+            <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-950/80 text-amber-300 border border-white/10 text-[11px] font-mono">
               Active Layer: {activeLayer} Raster Overlay
             </div>
 
             {/* SAM Grounding Mask Highlight Overlay */}
             {hasGroundingMask && showMaskOverlay && (
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-8">
-                {/* Visual Bounding Box & Polygon representation */}
                 <div 
                   className="w-3/4 h-3/4 border-2 border-blue-400 rounded-2xl relative animate-pulse"
                   style={{
@@ -225,10 +247,10 @@ export default function VisualCanvas({ scenario }) {
                     borderColor: scenario.maskOverlay.borderColor
                   }}
                 >
-                  <div className="absolute top-2 left-2 px-2.5 py-1 rounded bg-blue-950/90 text-blue-200 text-xs font-mono font-bold border border-blue-400/40">
+                  <div className="absolute top-2 left-2 px-2.5 py-1 rounded bg-slate-950/90 text-blue-300 text-xs font-mono font-bold border border-blue-400/50">
                     Target: {scenario.maskOverlay.targetEntity} (IoU: {scenario.maskOverlay.confidenceScore})
                   </div>
-                  <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-slate-950/90 text-[10px] font-mono text-slate-300">
+                  <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-slate-950/90 text-white text-[10px] font-mono">
                     Area: {scenario.maskOverlay.areaSqKm} km² | Polygon Verified
                   </div>
                 </div>
@@ -237,9 +259,9 @@ export default function VisualCanvas({ scenario }) {
           </div>
         )}
 
-        {/* Spectral Index Floating Inspector Footer */}
+        {/* Spectral Index Inspector Footer */}
         {scenario.spectralData && (
-          <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950/90 backdrop-blur border border-white/10 text-xs font-mono">
+          <div className="absolute bottom-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950/90 backdrop-blur text-white border border-white/10 text-xs font-mono">
             <div className="flex items-center gap-4">
               <span className="text-slate-400 flex items-center gap-1 text-[11px]">
                 <Activity className="w-3.5 h-3.5 text-amber-400" /> Spectral Readout:
