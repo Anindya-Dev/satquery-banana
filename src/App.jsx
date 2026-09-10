@@ -68,9 +68,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 relative selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 relative selection:bg-orange-500/20 selection:text-orange-900">
       
-      {/* Floating Navbar */}
+      {/* Light Theme Floating Navbar */}
       <Navbar 
         onOpenDemoModal={() => setIsDemoModalOpen(true)}
         currentScenarioTitle={activeScenario?.title}
@@ -86,13 +86,13 @@ export default function App() {
       <PartnersSection />
 
       {/* Interactive Platform Section (Embedded Live Engine Console) */}
-      <section id="platform" className="py-12 border-t border-white/10 relative bg-slate-900/40 backdrop-blur-sm">
+      <section id="platform" className="py-12 border-t border-slate-200/80 relative bg-slate-100/60">
         <div className="text-center max-w-3xl mx-auto mb-8 px-6">
           <div className="section-tag">LIVE PROTOTYPE ENGINE</div>
-          <h2 className="heading-font text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          <h2 className="heading-font text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
             Interactive Remote Sensing Assistant Console
           </h2>
-          <p className="mt-2 text-sm sm:text-base text-slate-300">
+          <p className="mt-2 text-sm sm:text-base text-slate-600">
             Execute single-image queries, bi-temporal change detection, SAM grounding, and optical+SAR fusion.
           </p>
         </div>

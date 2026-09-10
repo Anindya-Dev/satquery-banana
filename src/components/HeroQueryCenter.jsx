@@ -32,10 +32,10 @@ export default function HeroQueryCenter({
       
       {/* Title & Headline */}
       <div className="mb-6 text-center max-w-3xl mx-auto">
-        <h2 className="heading-font text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
-          Grounding AI Reasoning in <span className="text-amber-glow">Satellite Physics</span>
+        <h2 className="heading-font text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+          Grounding AI Reasoning in <span className="text-orange-600">Satellite Physics</span>
         </h2>
-        <p className="mt-2 text-sm sm:text-base text-slate-400">
+        <p className="mt-2 text-sm sm:text-base text-slate-600">
           Execute natural language queries over single rasters, bi-temporal pairs, and cross-modal optical+SAR satellite imagery backed by zero coordinate hallucinations.
         </p>
       </div>
@@ -51,14 +51,14 @@ export default function HeroQueryCenter({
               onClick={() => onSelectTask(mode.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                 isActive
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-lg shadow-amber-500/10'
-                  : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-slate-200'
+                  ? 'bg-orange-600 text-white border border-orange-700 shadow-md shadow-orange-500/20'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-sm'
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? 'text-amber-400' : 'text-slate-500'}`} />
+              <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500'}`} />
               <span>{mode.label}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider ${
-                isActive ? 'bg-amber-500/30 text-amber-200' : 'bg-white/5 text-slate-500'
+              <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-mono font-bold ${
+                isActive ? 'bg-orange-700 text-orange-100' : 'bg-slate-100 text-slate-500'
               }`}>
                 {mode.badge}
               </span>
@@ -68,18 +68,18 @@ export default function HeroQueryCenter({
       </div>
 
       {/* Main Query & Upload Console */}
-      <div className="glass-panel p-5 border border-white/10 shadow-2xl relative overflow-hidden">
+      <div className="glass-panel p-5 border border-slate-200 shadow-xl relative overflow-hidden bg-white">
         
         {/* Ambient Top Radiant Line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500/50 to-transparent"></div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
           
           {/* Natural Language Query Bar */}
           <div className="lg:col-span-8 flex flex-col gap-3">
-            <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <Search className="w-3.5 h-3.5 text-amber-400" />
+                <Search className="w-3.5 h-3.5 text-orange-600" />
                 Natural Language Query
               </span>
               <span className="text-[11px] text-slate-500 font-mono">Deterministic Interpreter Ready</span>
@@ -91,18 +91,18 @@ export default function HeroQueryCenter({
                 value={queryText}
                 onChange={(e) => setQueryText(e.target.value)}
                 placeholder="Ask about land cover, water segmentation, bi-temporal changes, or optical+SAR features..."
-                className="w-full bg-slate-950/80 border border-white/10 rounded-xl p-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all resize-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none font-medium"
               />
             </div>
 
             {/* Quick Prompt Suggestions */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] text-slate-500 font-medium">Try Prompt:</span>
+              <span className="text-[11px] text-slate-600 font-semibold">Try Prompt:</span>
               {SUGGESTED_PROMPTS.map((prompt, idx) => (
                 <button
                   key={idx}
                   onClick={() => setQueryText(prompt)}
-                  className="text-[11px] bg-white/5 hover:bg-white/10 text-slate-300 px-2.5 py-1 rounded-lg border border-white/5 transition-all text-left truncate max-w-[280px]"
+                  className="text-[11px] bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-900 px-2.5 py-1 rounded-lg border border-slate-200 hover:border-orange-300 transition-all text-left truncate max-w-[280px] font-medium"
                 >
                   "{prompt.slice(0, 36)}..."
                 </button>
@@ -112,8 +112,8 @@ export default function HeroQueryCenter({
 
           {/* Upload Dropzone & Action Button */}
           <div className="lg:col-span-4 flex flex-col gap-3">
-            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-              <Upload className="w-3.5 h-3.5 text-amber-400" />
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Upload className="w-3.5 h-3.5 text-orange-600" />
               Input Remote Sensing Imagery
             </label>
 
@@ -124,24 +124,24 @@ export default function HeroQueryCenter({
               onDrop={(e) => { e.preventDefault(); setDragOver(false); }}
               className={`border-2 border-dashed rounded-xl p-3 text-center transition-all cursor-pointer flex items-center justify-between px-4 ${
                 dragOver 
-                  ? 'border-amber-500 bg-amber-500/10' 
-                  : 'border-white/10 bg-slate-950/40 hover:border-amber-500/30 hover:bg-slate-900/40'
+                  ? 'border-orange-500 bg-orange-50' 
+                  : 'border-slate-300 bg-slate-50 hover:border-orange-400 hover:bg-orange-50/40'
               }`}
             >
               <div className="flex items-center gap-3 text-left">
-                <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400">
+                <div className="p-2 rounded-lg bg-orange-100 text-orange-600">
                   <ImageIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-slate-200">
+                  <p className="text-xs font-bold text-slate-900">
                     {activeScenario?.imageType === 'pair' ? 'Bi-Temporal Pair (T1 + T2)' : activeScenario?.imageType === 'optical_sar' ? 'Optical + SAR Pair' : 'Single Scene raster'}
                   </p>
-                  <p className="text-[10px] text-slate-400 font-mono">
+                  <p className="text-[10px] text-slate-500 font-mono">
                     {activeScenario?.location || 'GeoTIFF / PNG / Sentinel-2'}
                   </p>
                 </div>
               </div>
-              <span className="text-[11px] text-amber-400 font-medium px-2 py-1 rounded bg-amber-500/10 border border-amber-500/20">
+              <span className="text-[11px] text-orange-800 font-bold px-2 py-1 rounded bg-orange-100 border border-orange-200">
                 Loaded
               </span>
             </div>
@@ -150,7 +150,7 @@ export default function HeroQueryCenter({
             <button
               onClick={onRunAnalysis}
               disabled={isAnalyzing}
-              className="btn-primary w-full justify-center py-3 text-sm font-bold tracking-wide uppercase shadow-lg shadow-amber-500/20"
+              className="btn-amber-glow w-full justify-center py-3 text-sm font-extrabold tracking-wide uppercase shadow-lg shadow-orange-500/20"
             >
               {isAnalyzing ? (
                 <>
