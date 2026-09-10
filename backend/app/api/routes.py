@@ -4,6 +4,8 @@ from backend.app.domain.models import AnalysisRequest, AnalysisResult, TaskType
 from backend.app.orchestration.task_router import TaskRouter
 from backend.app.workers.job_queue import job_manager
 from backend.app.core.exceptions import InsufficientEvidenceError
+from backend.app.geospatial.geocoder import Geocoder
+from backend.app.storage.metadata_db import metadata_db
 
 router = APIRouter()
 task_router = TaskRouter()
@@ -29,7 +31,21 @@ def get_health() -> Dict[str, Any]:
 @router.post("/analyze", response_model=AnalysisResult)
 def analyze_query(request: AnalysisRequest) -> AnalysisResult:
     """Synchronous natural-language query analysis endpoint."""
-    return task_router.process(request)
+    import json
+    import time
+    from backend.app.core.config import settings
+    key = json.dumps(request.model_dump(mode="json"), sort_keys=True)
+    now = time.time()
+    cached = metadata_db.get_cached_response(key, now)
+    if cached:
+        return AnalysisResult.model_validate(cached)
+    result = task_router.process(request)
+    metadata_db.cache_response(key, result.model_dump(mode="json"), now + settings.RESPONSE_CACHE_TTL_SECONDS)
+    return result
+
+@router.get("/geocode")
+def geocode_place(q: str) -> List[Dict[str, object]]:
+    return Geocoder.search(q)
 
 @router.post("/jobs")
 def submit_analysis_job(request: AnalysisRequest) -> Dict[str, Any]:

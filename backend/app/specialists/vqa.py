@@ -61,9 +61,9 @@ class VQASpecialist(BaseSpecialist):
         )
 
         answer = (
-            f"Analysis of query '{request.query}' confirms high vegetation vitality (Mean NDVI: {ndvi_stats['mean']:.2f}) "
-            f"and stable moisture dynamics (Mean NDWI: {ndwi_stats['mean']:.2f}). "
-            "No anomalous land degradation or cloud interference was detected across the target region."
+            f"Sentinel-2 Level-2A measurements for the requested area produced Mean NDVI {ndvi_stats['mean']:.2f}, "
+            f"Mean NDWI {ndwi_stats['mean']:.2f}, and Mean NDBI {ndbi_stats['mean']:.2f}. "
+            "These are spectral observations, not a causal assessment."
         )
 
         return answer, [], None, spectral_indices

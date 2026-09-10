@@ -15,6 +15,8 @@ import DemoScenariosModal from './components/DemoScenariosModal';
 import { DEMO_SCENARIOS } from './data/demoScenarios';
 import { Activity } from 'lucide-react';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+
 export default function App() {
   const [activeScenario, setActiveScenario] = useState(DEMO_SCENARIOS[0]);
   const [currentTask, setCurrentTask] = useState(DEMO_SCENARIOS[0].task);
@@ -22,6 +24,11 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [pipelineToast, setPipelineToast] = useState(null);
+  const [analysisArea, setAnalysisArea] = useState({
+    bbox: DEMO_SCENARIOS[0].bbox.join(','),
+    startDate: '2024-05-01T00:00:00Z',
+    endDate: '2024-05-31T23:59:59Z',
+  });
 
   // Switch task mode & map to corresponding demo scenario if available
   const handleSelectTask = (taskMode) => {
@@ -42,24 +49,61 @@ export default function App() {
     setQueryText(scenario.query);
   };
 
-  // Simulate pipeline execution
-  const handleRunAnalysis = () => {
+  const handleRunAnalysis = async () => {
+    if (!API_BASE_URL) {
+      setPipelineToast('API URL is not configured for this deployment.');
+      return;
+    }
+    const bbox = analysisArea.bbox.split(',').map(Number);
+    if (bbox.length !== 4 || bbox.some(Number.isNaN)) {
+      setPipelineToast('Enter four valid AOI coordinates: min longitude, min latitude, max longitude, max latitude.');
+      return;
+    }
     setIsAnalyzing(true);
-    setPipelineToast("Task Router: Classifying intent & running validation gates...");
-
-    setTimeout(() => {
-      setPipelineToast("Specialist Dispatch: Executing raster operations & spectral indices...");
-    }, 1200);
-
-    setTimeout(() => {
-      setPipelineToast("Evidence Layer: Validating claims against spatial rasters...");
-    }, 2200);
-
-    setTimeout(() => {
+    setPipelineToast('Searching live satellite scenes...');
+    const taskTypes = {
+      SINGLE_IMAGE_VQA: 'Visual Question Answering',
+      VISUAL_GROUNDING: 'Visual Grounding & Segmentation',
+      CHANGE_DETECTION: 'Bi-Temporal Change Detection',
+      OPTICAL_SAR_FUSION: 'Optical-SAR Multimodal Fusion',
+      AGENTIC_ROUTING: 'Auto-Classified Query',
+    };
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: queryText,
+          task_type: taskTypes[currentTask],
+          bbox,
+          start_date: analysisArea.startDate,
+          end_date: analysisArea.endDate,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.refusal_triggered) throw new Error(data.refusal_reason || data.error?.message || 'Analysis could not be completed.');
+      setActiveScenario((previous) => ({
+        ...previous,
+        bbox,
+        imageType: data.image_secondary_url ? 'pair' : 'single',
+        imagePrimary: data.image_primary_url || previous.imagePrimary,
+        imageSecondary: data.image_secondary_url || previous.imageSecondary,
+        groundedAnswer: data.summary_answer,
+        confidence: {
+          level: data.confidence.rating,
+          score: Math.round(data.confidence.score * 100),
+          factors: data.confidence.factors,
+        },
+        evidenceChain: data.evidence_chain.map((item) => ({ id: item.evidence_id, type: item.evidence_type, desc: item.description, source: item.layer, value: `${item.metric_name}: ${item.metric_value} ${item.unit}` })),
+        spectralData: Object.fromEntries(Object.entries(data.spectral_indices || {}).filter(([, value]) => value !== null).map(([key, value]) => [key.toUpperCase().replace('_MEAN', ''), { avg: Number(value).toFixed(3) }])),
+      }));
+      setPipelineToast(`Live analysis complete in ${Math.round(data.processing_time_ms)} ms.`);
+    } catch (error) {
+      setPipelineToast(error.message);
+    } finally {
       setIsAnalyzing(false);
-      setPipelineToast("Analysis Complete! 100% Evidence Grounded.");
-      setTimeout(() => setPipelineToast(null), 3000);
-    }, 3200);
+      setTimeout(() => setPipelineToast(null), 6000);
+    }
   };
 
   const scrollToPlatform = () => {
@@ -106,6 +150,8 @@ export default function App() {
           onRunAnalysis={handleRunAnalysis}
           isAnalyzing={isAnalyzing}
           activeScenario={activeScenario}
+          analysisArea={analysisArea}
+          setAnalysisArea={setAnalysisArea}
         />
 
         {/* Interactive Dual Viewport & Evidence Panel */}

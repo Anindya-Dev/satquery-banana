@@ -7,7 +7,7 @@
 [![Test Suite](https://img.shields.io/badge/tests-203%20passed-brightgreen.svg)](#automated-test-suite)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**SatQuery AI** is a conversational, evidence-grounded Vision-Language Assistant designed for remote sensing intelligence over satellite imagery. Built for complex Earth observation workflows, SatQuery AI combines multi-spectral optical data (Sentinel-2 L2A), synthetic aperture radar (Sentinel-1 SAR), bi-temporal change detection, segment grounding, and deterministic evidence gating.
+**SatQuery AI** is a conversational, evidence-grounded remote-sensing assistant. Its live VQA and change-detection endpoints search public Sentinel-2 L2A scenes through the Microsoft Planetary Computer STAC API and calculate indices from Cloud Optimized GeoTIFF raster windows.
 
 ---
 
@@ -97,6 +97,24 @@ cp backend/.env.example backend/.env
 | `ALLOW_MOCK_FALLBACK` | Enable deterministic fallback when API key is unset | `True` |
 | `PORT` | Backend FastAPI Port | `8000` |
 | `VITE_API_BASE_URL` | Frontend API Target | `http://localhost:8000` |
+
+### Live Data Scope
+
+- VQA and bi-temporal change detection use real Sentinel-2 L2A imagery when the request provides an AOI/date range or names a supported location.
+- The API accepts `bbox`, `start_date`, and `end_date` in `POST /api/v1/analyze`. A query containing one or two years is converted into a matching date range.
+- The free public catalog has rate limits and only returns scenes that satisfy the cloud-quality threshold.
+- Live segmentation supports water and vegetation through measured Sentinel-2 spectral masks. Arbitrary objects still require high-resolution imagery and a dedicated model; Sentinel-1 RTC needs the configured subscription key.
+
+### Production Environment
+
+Set these in Render before enabling live traffic:
+
+- `CORS_ORIGINS=https://satquery-banana.vercel.app` (add preview domains only when needed)
+- `NOMINATIM_USER_AGENT` with a real contact email for public place search
+- `PLANETARY_COMPUTER_SUBSCRIPTION_KEY` to enable Sentinel-1 RTC; Sentinel-2 remains public
+- a persistent disk mounted for `DB_PATH` if queued jobs and the response cache must survive Render restarts
+
+Set `VITE_API_BASE_URL` in Vercel to the existing Render backend HTTPS URL. The UI sends explicit `bbox`, `start_date`, and `end_date` fields with each live request.
 
 ### 3. Run Locally
 
