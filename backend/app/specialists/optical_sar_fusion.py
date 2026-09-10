@@ -5,8 +5,6 @@ from backend.app.domain.models import AnalysisRequest, GroundingMask, ChangeMapR
 from backend.app.domain.evidence import EvidenceCollector
 from backend.app.geospatial.sar_ops import SAROps
 from backend.app.satellite.base import SatelliteProvider
-from backend.app.satellite.mock_provider import MockSatelliteProvider
-from backend.app.core.exceptions import SatelliteDataUnavailableError
 
 class OpticalSARFusionSpecialist(BaseSpecialist):
     def __init__(self):
@@ -19,21 +17,18 @@ class OpticalSARFusionSpecialist(BaseSpecialist):
         provider: Optional[SatelliteProvider] = None,
         scene_id: str = "SCENE-ASSAM-SAR-2024"
     ) -> Tuple[str, List[GroundingMask], Optional[ChangeMapResult], Optional[SpectralIndices]]:
-        if provider and provider.provider_name != "SIH Mock Satellite Provider":
-            raise SatelliteDataUnavailableError(
-                "Live Sentinel-1 GRD acquisition is not configured yet. Optical-SAR fusion will be enabled after the "
-                "Sentinel-1 provider and radiometric terrain-correction pipeline are deployed."
-            )
-        prov = provider or MockSatelliteProvider()
+        if provider is None:
+            raise ValueError("Optical-SAR fusion requires a live Sentinel-1 RTC provider.")
+        prov = provider
         
         # Retrieve SAR VV amplitude via SatelliteProvider abstraction
-        sar_raw_dn = prov.get_band_data(scene_id, "VV")
+        sar_raw_dn = prov.get_band_data(scene_id, "vv")
         
         # Apply Enhanced Lee 5x5 speckle filter
         filtered_sar = SAROps.enhanced_lee_filter(sar_raw_dn, win_size=5)
         
         # Calibrate to Sigma0 dB
-        sigma0_db = SAROps.calibrate_sigma0_db(filtered_sar)
+        sigma0_db = SAROps.linear_to_db(filtered_sar)
         mean_sigma0 = float(np.round(np.mean(sigma0_db), 2))
         water_mask_pct = float(np.round((np.sum(sigma0_db < -15.0) / sigma0_db.size) * 100.0, 2))
 

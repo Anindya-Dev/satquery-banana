@@ -13,6 +13,7 @@ from backend.app.geospatial.geocoder import Geocoder
 from backend.app.geospatial.coregistration import CoRegistrationEngine
 from backend.app.satellite.base import SatelliteProvider
 from backend.app.satellite.sentinel2 import Sentinel2Provider
+from backend.app.satellite.sentinel1 import Sentinel1RTCProvider
 from backend.app.retrieval.hybrid_retriever import HybridRetriever
 from backend.app.ai.llm_provider import OpenAIProvider
 from backend.app.specialists.vqa import VQASpecialist
@@ -41,7 +42,8 @@ class TaskRouter:
         request.bbox = structured_query.query_bbox
 
         # Layer 4 & 5: Authoritative live STAC retrieval and pixel-quality check.
-        scenes = self.satellite_provider.discover_scenes(
+        provider = Sentinel1RTCProvider() if task_type == TaskType.OPTICAL_SAR_FUSION else self.satellite_provider
+        scenes = provider.discover_scenes(
             bbox=structured_query.query_bbox,
             start_date=structured_query.start_date,
             end_date=structured_query.end_date,
@@ -59,13 +61,13 @@ class TaskRouter:
             raise InsufficientEvidenceError(
                 "Change detection needs two distinct cloud-valid Sentinel-2 acquisitions in the requested date range."
             )
-        valid_pixel_ratio = self.satellite_provider.get_valid_pixel_ratio(sample_img.id)
+        valid_pixel_ratio = provider.get_valid_pixel_ratio(sample_img.id)
         
         # Layer 6: Spatial Alignment Check for Change Detection
         coreg_quality = None
         if task_type == TaskType.CHANGE_DETECTION:
-            t1_img = self.satellite_provider.get_band_data(comparison_img.id, "B4")
-            t2_img = self.satellite_provider.get_band_data(sample_img.id, "B4")
+            t1_img = provider.get_band_data(comparison_img.id, "B4")
+            t2_img = provider.get_band_data(sample_img.id, "B4")
             coreg_quality = CoRegistrationEngine.evaluate_alignment(t1_img, t2_img)
 
         # Layer 7: Pre-VLM Evidence Sufficiency & Safety Refusal Gate
@@ -100,20 +102,20 @@ class TaskRouter:
 
         if task_type == TaskType.CHANGE_DETECTION:
             answer_text, grounding_masks, change_map, spectral_indices = self.change_specialist.execute(
-                request, evidence_collector, provider=self.satellite_provider, scene_id=sample_img.id,
+                request, evidence_collector, provider=provider, scene_id=sample_img.id,
                 comparison_scene_id=comparison_img.id
             )
         elif task_type == TaskType.GROUNDING:
             answer_text, grounding_masks, change_map, spectral_indices = self.grounding_specialist.execute(
-                request, evidence_collector, provider=self.satellite_provider, scene_id=sample_img.id
+                request, evidence_collector, provider=provider, scene_id=sample_img.id
             )
         elif task_type == TaskType.OPTICAL_SAR_FUSION:
             answer_text, grounding_masks, change_map, spectral_indices = self.fusion_specialist.execute(
-                request, evidence_collector, provider=self.satellite_provider, scene_id=sample_img.id
+                request, evidence_collector, provider=provider, scene_id=sample_img.id
             )
         else:
             answer_text, grounding_masks, change_map, spectral_indices = self.vqa_specialist.execute(
-                request, evidence_collector, provider=self.satellite_provider, scene_id=sample_img.id
+                request, evidence_collector, provider=provider, scene_id=sample_img.id
             )
 
         evidence_chain = evidence_collector.get_all()
@@ -131,7 +133,7 @@ class TaskRouter:
         )
 
         elapsed = float(round((time.time() - start_time) * 1000, 2))
-        preview_provider = self.satellite_provider if isinstance(self.satellite_provider, Sentinel2Provider) else None
+        preview_provider = provider if isinstance(provider, Sentinel2Provider) and task_type != TaskType.OPTICAL_SAR_FUSION else None
         primary_preview = preview_provider.get_rgb_preview(sample_img.id) if preview_provider else None
         secondary_preview = preview_provider.get_rgb_preview(comparison_img.id) if preview_provider and comparison_img else None
 

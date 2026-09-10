@@ -20,12 +20,14 @@ from backend.app.core.config import settings
 class Sentinel2Provider(SatelliteProvider):
     """Reads real Sentinel-2 L2A Cloud Optimized GeoTIFF windows from Planetary Computer."""
 
-    def __init__(self, stac_api_url: Optional[str] = None):
-        super().__init__(provider_name="Microsoft Planetary Computer Sentinel-2 L2A")
+    def __init__(self, stac_api_url: Optional[str] = None, collection: Optional[str] = None, provider_name: Optional[str] = None):
+        super().__init__(provider_name=provider_name or "Microsoft Planetary Computer Sentinel-2 L2A")
         self.stac_api_url = stac_api_url or settings.STAC_API_URL
+        self.collection = collection or settings.STAC_COLLECTION
         self._items: Dict[str, Dict[str, Any]] = {}
         self._band_cache: Dict[tuple[str, str], np.ndarray] = {}
         self._preview_cache: Dict[str, str] = {}
+        self._aoi_by_scene: Dict[str, List[float]] = {}
 
     def discover_scenes(
         self,
@@ -35,11 +37,11 @@ class Sentinel2Provider(SatelliteProvider):
         max_cloud: float = 15.0
     ) -> List[ImageMetadata]:
         payload = {
-            "collections": [settings.STAC_COLLECTION],
+            "collections": [self.collection],
             "bbox": bbox,
             "datetime": f"{start_date}/{end_date}",
             "limit": settings.STAC_SEARCH_LIMIT,
-            "query": {"eo:cloud_cover": {"lt": max_cloud}},
+            "query": {"eo:cloud_cover": {"lt": max_cloud}} if self.collection == "sentinel-2-l2a" else {},
         }
         try:
             response = requests.post(f"{self.stac_api_url}/search", json=payload, timeout=30)
@@ -53,6 +55,7 @@ class Sentinel2Provider(SatelliteProvider):
         for item in features:
             scene_id = item["id"]
             self._items[scene_id] = item
+            self._aoi_by_scene[scene_id] = bbox
             props = item.get("properties", {})
             scenes.append(ImageMetadata(
                 id=scene_id,
@@ -96,7 +99,7 @@ class Sentinel2Provider(SatelliteProvider):
             raise SatelliteDataUnavailableError(f"Scene '{scene_id}' does not provide required Sentinel-2 band '{band_name}'.")
 
         href = self._sign_asset(asset["href"])
-        bbox = item.get("bbox")
+        bbox = self._aoi_by_scene.get(scene_id, item.get("bbox"))
         try:
             with rasterio.open(href) as dataset:
                 bounds = transform_bounds("EPSG:4326", dataset.crs, *bbox, densify_pts=21)
@@ -163,9 +166,12 @@ class Sentinel2Provider(SatelliteProvider):
 
     def _sign_asset(self, href: str) -> str:
         try:
+            params = {"href": href}
+            if settings.PLANETARY_COMPUTER_SUBSCRIPTION_KEY:
+                params["subscription-key"] = settings.PLANETARY_COMPUTER_SUBSCRIPTION_KEY
             response = requests.get(
                 "https://planetarycomputer.microsoft.com/api/sas/v1/sign",
-                params={"href": href},
+                params=params,
                 timeout=30,
             )
             response.raise_for_status()

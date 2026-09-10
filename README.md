@@ -103,7 +103,18 @@ cp backend/.env.example backend/.env
 - VQA and bi-temporal change detection use real Sentinel-2 L2A imagery when the request provides an AOI/date range or names a supported location.
 - The API accepts `bbox`, `start_date`, and `end_date` in `POST /api/v1/analyze`. A query containing one or two years is converted into a matching date range.
 - The free public catalog has rate limits and only returns scenes that satisfy the cloud-quality threshold.
-- Generic object segmentation and Sentinel-1 SAR fusion are intentionally unavailable in live mode until dedicated real-data/model pipelines are deployed; the API returns a structured unavailable response instead of demo results.
+- Live segmentation supports water and vegetation through measured Sentinel-2 spectral masks. Arbitrary objects still require high-resolution imagery and a dedicated model; Sentinel-1 RTC needs the configured subscription key.
+
+### Production Environment
+
+Set these in Render before enabling live traffic:
+
+- `CORS_ORIGINS=https://satquery-banana.vercel.app` (add preview domains only when needed)
+- `NOMINATIM_USER_AGENT` with a real contact email for public place search
+- `PLANETARY_COMPUTER_SUBSCRIPTION_KEY` to enable Sentinel-1 RTC; Sentinel-2 remains public
+- a persistent disk mounted for `DB_PATH` if queued jobs and the response cache must survive Render restarts
+
+Set `VITE_API_BASE_URL` in Vercel to the existing Render backend HTTPS URL. The UI sends explicit `bbox`, `start_date`, and `end_date` fields with each live request.
 
 ### 3. Run Locally
 

@@ -8,6 +8,10 @@ except ImportError:
 
 class SAROps:
     @staticmethod
+    def linear_to_db(backscatter: np.ndarray) -> np.ndarray:
+        """Convert calibrated linear backscatter from an RTC product to decibels."""
+        return 10.0 * np.log10(np.maximum(backscatter.astype(np.float32), 1e-10))
+    @staticmethod
     def enhanced_lee_filter(img: np.ndarray, win_size: int = 5, k: float = 1.0, cu: float = 0.52) -> np.ndarray:
         """
         Enhanced Lee Speckle Filter for Sentinel-1 SAR intensity image.

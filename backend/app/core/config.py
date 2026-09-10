@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     STAC_COLLECTION: str = "sentinel-2-l2a"
     STAC_SEARCH_LIMIT: int = 20
     RASTER_MAX_DIMENSION: int = 768
+    PLANETARY_COMPUTER_SUBSCRIPTION_KEY: str = ""
+    CORS_ORIGINS: str = "https://satquery-banana.vercel.app,http://localhost:3000"
+    API_RATE_LIMIT_PER_MINUTE: int = 20
+    RESPONSE_CACHE_TTL_SECONDS: int = 900
+    NOMINATIM_USER_AGENT: str = "SatQueryAI/1.0 (contact: admin@example.com)"
+    NOMINATIM_MIN_INTERVAL_SECONDS: float = 1.1
     
     # Storage & Database Paths
     BASE_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
