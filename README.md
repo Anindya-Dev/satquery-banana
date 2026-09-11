@@ -93,7 +93,11 @@ cp backend/.env.example backend/.env
 
 | Variable | Description | Default |
 |---|---|---|
-| `OPENAI_API_KEY` | OpenAI API Key for VLM calls | `your_openai_api_key_here` |
+| `OPENAI_API_KEY` | OpenAI-compatible API key for VLM calls | `your_openai_api_key_here` |
+| `OPENAI_API_BASE` | Optional OpenAI-compatible API base URL, for providers such as NVIDIA NIM | empty |
+| `NVIDIA_API_KEY` | Optional NVIDIA API key; used automatically when `LITELLM_MODEL` points to an NVIDIA model | empty |
+| `NVIDIA_API_BASE_URL` | NVIDIA NIM OpenAI-compatible endpoint | `https://integrate.api.nvidia.com/v1` |
+| `LITELLM_MODEL` | LiteLLM model name, e.g. `gpt-4o-mini` or `openai/nvidia/nemotron-3.5-lightning-30b-a3b` | `gpt-4o-mini` |
 | `ALLOW_MOCK_FALLBACK` | Enable deterministic fallback when API key is unset | `True` |
 | `PORT` | Backend FastAPI Port | `8000` |
 | `VITE_API_BASE_URL` | Frontend API Target | `http://localhost:8000` |

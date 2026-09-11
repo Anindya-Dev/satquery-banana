@@ -15,6 +15,8 @@ import DemoScenariosModal from '../components/DemoScenariosModal';
 import { DEMO_SCENARIOS } from '../data/demoScenarios';
 import { Activity } from 'lucide-react';
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+
 export default function ConsolePage({ onOpenDemoModal, isDemoModalOpen, setIsDemoModalOpen }) {
   const [activeScenario, setActiveScenario] = useState(DEMO_SCENARIOS[0]);
   const [currentTask, setCurrentTask] = useState(DEMO_SCENARIOS[0].task);
@@ -44,10 +46,10 @@ export default function ConsolePage({ onOpenDemoModal, isDemoModalOpen, setIsDem
   // Execute backend pipeline via FastAPI API call
   const handleRunAnalysis = async () => {
     setIsAnalyzing(true);
-    setPipelineToast("Task Router: Dispatching to FastAPI backend on http://localhost:8000...");
+    setPipelineToast(`Task Router: Dispatching to FastAPI backend on ${API_BASE_URL}...`);
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/analyze", {
+      const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     # LLM / AI Provider
     LITELLM_MODEL: str = "gpt-4o-mini"
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_API_BASE: str = os.getenv("OPENAI_API_BASE", "")
+    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+    NVIDIA_API_BASE_URL: str = os.getenv("NVIDIA_API_BASE_URL", "https://integrate.api.nvidia.com/v1")
     ALLOW_MOCK_FALLBACK: bool = True
 
     # Public Planetary Computer STAC service. Asset URLs are signed anonymously at request time.
