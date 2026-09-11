@@ -29,9 +29,27 @@ services:
         value: https://planetarycomputer.microsoft.com/api/stac/v1
       - key: STAC_COLLECTION
         value: sentinel-2-l2a
+      - key: STAC_SEARCH_LIMIT
+        value: 20
+      - key: RASTER_MAX_DIMENSION
+        value: 768
+      - key: PLANETARY_COMPUTER_SUBSCRIPTION_KEY
+        sync: false
       - key: NOMINATIM_USER_AGENT
         value: SatQueryAI/1.0 (hackathon-demo)
+      - key: NOMINATIM_MIN_INTERVAL_SECONDS
+        value: 1.1
       - key: API_RATE_LIMIT_PER_MINUTE
         value: 60
       - key: RESPONSE_CACHE_TTL_SECONDS
         value: 900
+      - key: MAX_ALLOWED_CLOUD_PERCENT
+        value: 15.0
+      - key: MIN_VALID_PIXEL_RATIO
+        value: 0.75
+      - key: GOOD_COREGISTRATION_SHIFT_PX
+        value: 3.0
+      - key: MAX_DEGRADED_COREGISTRATION_SHIFT_PX
+        value: 6.0
+      - key: MIN_CONFIDENCE_THRESHOLD
+        value: 0.70
