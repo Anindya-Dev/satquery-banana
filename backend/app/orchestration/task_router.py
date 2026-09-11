@@ -406,6 +406,10 @@ class TaskRouter:
         dynamic_primary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon},{min_lat},{max_lon},{max_lat}&bboxSR=4326&imageSR=4326&size=800,600&f=image"
         dynamic_secondary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon-0.008},{min_lat-0.008},{max_lon+0.008},{max_lat+0.008}&bboxSR=4326&imageSR=4326&size=800,600&f=image" if task == TaskType.CHANGE_DETECTION else None
 
+        user_dates = [d for d in [request.start_date, request.end_date] if d]
+        if not user_dates:
+            user_dates = ["T1 Baseline", "T2 Target"]
+
         return AnalysisResult(
             request_id=req_id,
             query=request.query,
@@ -416,6 +420,6 @@ class TaskRouter:
             confidence=conf,
             image_primary_url=dynamic_primary,
             image_secondary_url=dynamic_secondary,
-            scene_dates=["2024-02-10", "2024-08-15"],
+            scene_dates=user_dates,
             processing_time_ms=312.4
         )
