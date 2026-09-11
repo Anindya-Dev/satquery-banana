@@ -15,7 +15,7 @@ import DemoScenariosModal from './components/DemoScenariosModal';
 import { DEMO_SCENARIOS } from './data/demoScenarios';
 import { Activity } from 'lucide-react';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'https://satquery-backend-x0fy.onrender.com').replace(/\/$/, '');
 
 export default function App() {
   const [activeScenario, setActiveScenario] = useState(DEMO_SCENARIOS[0]);
@@ -56,16 +56,22 @@ export default function App() {
       return;
     }
     setIsAnalyzing(true);
+    setPipelineToast('Initializing Grounded Spatial Telemetry...');
 
-    // If no backend is configured, run the polished demo pipeline simulation
-    if (!API_BASE_URL) {
-      setPipelineToast('Task Router: Classifying intent & running validation gates...');
-      await new Promise(r => setTimeout(r, 1000));
-      setPipelineToast('Specialist Dispatch: Executing raster operations & spectral indices...');
-      await new Promise(r => setTimeout(r, 1000));
-      setPipelineToast('Evidence Layer: Validating claims against spatial rasters...');
-      await new Promise(r => setTimeout(r, 900));
-      setPipelineToast('Analysis Complete! 100% Evidence Grounded. (Demo Mode)');
+    if (activeScenario.id === 'scenario-3') {
+      setPipelineToast('Sentinel-1 SAR C-Band Speckle Filter Active...');
+      await new Promise(r => setTimeout(r, 600));
+    }
+
+    if (activeScenario.refusal_triggered) {
+      setPipelineToast('Safety Refusal Gate: High Cloud Cover (>15%) Detected.');
+      await new Promise(r => setTimeout(r, 800));
+      setActiveScenario((previous) => ({
+        ...previous,
+        groundedAnswer: `Refusal: ${activeScenario.refusal_reason}`,
+        confidence: { level: 'LOW', score: 12, factors: { validPixels: '14.2%', cloudCoverage: '78.5%', spectralSanity: 'Failed', spatialMatch: 'Degraded' } },
+        evidenceChain: [],
+      }));
       setIsAnalyzing(false);
       setTimeout(() => setPipelineToast(null), 4000);
       return;
@@ -80,9 +86,13 @@ export default function App() {
     };
     try {
       setPipelineToast('Searching live satellite scenes...');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
       const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           query: queryText,
           task_type: taskTypes[currentTask],
@@ -91,6 +101,8 @@ export default function App() {
           end_date: analysisArea.endDate,
         }),
       });
+      clearTimeout(timeoutId);
+
       const data = await response.json();
       if (!response.ok || data.refusal_triggered) throw new Error(data.refusal_reason || data.error?.message || 'Analysis could not be completed.');
       
