@@ -11,7 +11,6 @@ import SolutionsAccordion from './components/SolutionsAccordion';
 import MetricsBanner from './components/MetricsBanner';
 import SIHComplianceChecklist from './components/SIHComplianceChecklist';
 import FooterCTA from './components/FooterCTA';
-import DemoScenariosModal from './components/DemoScenariosModal';
 import { DEMO_SCENARIOS } from './data/demoScenarios';
 import { Activity } from 'lucide-react';
 
@@ -23,7 +22,6 @@ export default function App() {
   const [queryText, setQueryText] = useState(DEMO_SCENARIOS[0].query);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [hasRunAnalysis, setHasRunAnalysis] = useState(false);
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [pipelineToast, setPipelineToast] = useState(null);
   const [analysisArea, setAnalysisArea] = useState({
     bbox: DEMO_SCENARIOS[0].bbox.join(','),
@@ -253,13 +251,11 @@ export default function App() {
       
       {/* Light Theme Floating Navbar */}
       <Navbar 
-        onOpenDemoModal={() => setIsDemoModalOpen(true)}
         currentScenarioTitle={activeScenario?.title}
       />
 
       {/* Hackathon Hero Section */}
       <HeroSection 
-        onOpenDemoModal={() => setIsDemoModalOpen(true)}
         onScrollToPlatform={scrollToPlatform}
       />
 
@@ -313,7 +309,7 @@ export default function App() {
       <FeaturesSection onSelectTask={handleSelectTask} />
 
       {/* System Architecture & Validation Gates */}
-      <DeepFeatureShowcase onOpenDemoModal={() => setIsDemoModalOpen(true)} />
+      <DeepFeatureShowcase />
 
       {/* Supported Analysis Applications */}
       <SolutionsAccordion />
@@ -325,7 +321,7 @@ export default function App() {
       <SIHComplianceChecklist />
 
       {/* Technical Footer & Action Banner */}
-      <FooterCTA onOpenDemoModal={() => setIsDemoModalOpen(true)} />
+      <FooterCTA />
 
       {/* Pipeline Status Toast Banner */}
       {pipelineToast && (
@@ -334,14 +330,6 @@ export default function App() {
           <span>{pipelineToast}</span>
         </div>
       )}
-
-      {/* SIH Demo Suite Modal */}
-      <DemoScenariosModal 
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-        onSelectScenario={handleSelectScenario}
-        activeScenarioId={activeScenario?.id}
-      />
 
     </div>
   );

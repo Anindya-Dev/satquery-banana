@@ -18,20 +18,13 @@ export default function FooterCTA({ onOpenDemoModal }) {
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <button 
-              onClick={onOpenDemoModal}
-              className="btn-amber-glow text-sm"
-            >
-              <span>Load 5 SIH Evaluator Demos</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
             <a 
               href="#platform"
-              className="btn-pill-glass text-sm border-slate-300 text-slate-800 hover:bg-slate-100"
+              className="btn-amber-glow text-sm inline-flex items-center gap-2 cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 text-orange-600" />
+              <Sparkles className="w-4 h-4 text-white" />
               <span>Launch Interactive Console</span>
+              <ArrowRight className="w-4 h-4" />
             </a>
           </div>
         </div>

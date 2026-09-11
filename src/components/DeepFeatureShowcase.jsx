@@ -77,13 +77,13 @@ export default function DeepFeatureShowcase({ onOpenDemoModal }) {
                 </p>
 
                 <div className="pt-2">
-                  <button 
-                    onClick={onOpenDemoModal}
-                    className="btn-pill-glass text-xs font-bold border-slate-300 hover:bg-slate-100"
+                  <a 
+                    href="#platform"
+                    className="btn-pill-glass text-xs font-bold border-slate-300 hover:bg-slate-100 inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <span>{feat.cta}</span>
                     <ArrowRight className="w-3 h-3 text-orange-600" />
-                  </button>
+                  </a>
                 </div>
               </div>
 

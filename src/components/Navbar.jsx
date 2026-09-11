@@ -34,14 +34,14 @@ export default function Navbar({ onOpenDemoModal, currentScenarioTitle }) {
 
         {/* Action Button */}
         <div className="flex items-center gap-3">
-          <button 
-            onClick={onOpenDemoModal}
-            className="btn-pill-primary text-xs shadow-md"
+          <a 
+            href="#platform"
+            className="btn-pill-primary text-xs shadow-md inline-flex items-center gap-1.5 cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Load SIH Demos</span>
+            <span>Launch Live Engine</span>
             <ArrowRight className="w-3 h-3 ml-0.5" />
-          </button>
+          </a>
         </div>
 
       </header>

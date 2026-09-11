@@ -38,14 +38,6 @@ export default function HeroSection({ onOpenDemoModal, onScrollToPlatform }) {
               <span>Test Live Engine</span>
               <ArrowRight className="w-4 h-4" />
             </button>
-
-            <button 
-              onClick={onOpenDemoModal}
-              className="btn-pill-glass text-sm border-slate-300 text-slate-800 hover:bg-slate-100"
-            >
-              <Sparkles className="w-4 h-4 text-orange-600" />
-              <span>Load 5 SIH Evaluator Demos</span>
-            </button>
           </div>
 
           {/* Technical Validation Badges */}
