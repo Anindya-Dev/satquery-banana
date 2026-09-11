@@ -56,16 +56,28 @@ class MockSatelliteProvider(SatelliteProvider):
     def get_band_data(self, scene_id: str, band_name: str) -> np.ndarray:
         np.random.seed(abs(hash(scene_id + band_name)) % (2**32 - 1))
         
+        # Use consistent array size for all bands to enable coregistration
+        arr_size = 512
+        
         # Spectral band reflectance simulation based on band type
         if "B8" in band_name or "NIR" in band_name:
-            return np.random.uniform(0.35, 0.75, (512, 512)).astype(np.float32)
+            return np.random.uniform(0.35, 0.75, (arr_size, arr_size)).astype(np.float32)
         elif "B4" in band_name or "RED" in band_name:
-            return np.random.uniform(0.04, 0.18, (512, 512)).astype(np.float32)
+            return np.random.uniform(0.04, 0.18, (arr_size, arr_size)).astype(np.float32)
         elif "B3" in band_name or "GREEN" in band_name:
-            return np.random.uniform(0.08, 0.28, (512, 512)).astype(np.float32)
+            return np.random.uniform(0.08, 0.28, (arr_size, arr_size)).astype(np.float32)
         elif "B11" in band_name or "SWIR" in band_name:
-            return np.random.uniform(0.05, 0.30, (512, 512)).astype(np.float32)
+            return np.random.uniform(0.05, 0.30, (arr_size, arr_size)).astype(np.float32)
         elif "VV" in band_name or "VH" in band_name:
-            return np.random.uniform(40.0, 280.0, (512, 512)).astype(np.float32)
+            return np.random.uniform(40.0, 280.0, (arr_size, arr_size)).astype(np.float32)
         else:
-            return np.random.uniform(0.1, 0.5, (512, 512)).astype(np.float32)
+            return np.random.uniform(0.1, 0.5, (arr_size, arr_size)).astype(np.float32)
+
+    def get_valid_pixel_ratio(self, scene_id: str) -> float:
+        """Mock implementation: return high valid pixel ratio for testing."""
+        return 0.98
+
+    def get_rgb_preview(self, scene_id: str) -> str:
+        """Mock implementation: return a placeholder data URI."""
+        # Return a 1x1 transparent PNG as placeholder
+        return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="

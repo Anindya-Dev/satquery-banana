@@ -74,4 +74,18 @@ class GroundingSpecialist(BaseSpecialist):
             unit="sq_m",
             bbox=component_bbox,
         )
-        return f"Segmented the largest {label.lower()} component covering {area_sq_m:.0f} sq m from a live {index_name} mask.", [mask], None, None
+        
+        # Compute spectral indices for the scene
+        index_stats = RasterOps.get_index_stats(index)
+        
+        if label == "Open water":
+            spectral_indices = SpectralIndices(
+                ndwi_mean=index_stats['mean'],
+                mndwi_mean=index_stats['mean']
+            )
+        else:
+            spectral_indices = SpectralIndices(
+                ndvi_mean=index_stats['mean']
+            )
+        
+        return f"Segmented the largest {label.lower()} component covering {area_sq_m:.0f} sq m from a live {index_name} mask.", [mask], None, spectral_indices

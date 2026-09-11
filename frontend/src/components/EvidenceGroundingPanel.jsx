@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle2, AlertTriangle, Link as LinkIcon, FileText, Database, Layers, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, AlertTriangle, Link as LinkIcon, FileText, Database, Layers, Sparkles, ChevronDown, ChevronUp, Lock, Network } from 'lucide-react';
+import GraphifyModal from './GraphifyModal';
 
 export default function EvidenceGroundingPanel({ scenario }) {
   const [activeTab, setActiveTab] = useState('ANSWER'); // ANSWER | EVIDENCE | GATES
+  const [isGraphifyOpen, setIsGraphifyOpen] = useState(false);
 
   if (!scenario) return null;
 
@@ -12,6 +14,13 @@ export default function EvidenceGroundingPanel({ scenario }) {
   return (
     <div className="glass-panel p-4 flex flex-col h-full border border-slate-200 bg-white shadow-sm relative overflow-hidden">
       
+      {/* Graphify Modal Container */}
+      <GraphifyModal 
+        isOpen={isGraphifyOpen} 
+        onClose={() => setIsGraphifyOpen(false)} 
+        scenarioData={scenario}
+      />
+
       {/* Panel Header */}
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
         <div className="flex items-center gap-2">
@@ -24,21 +33,34 @@ export default function EvidenceGroundingPanel({ scenario }) {
           </div>
         </div>
 
-        {/* Confidence Badge */}
-        <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
-          isHighConf 
-            ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
-            : 'bg-orange-50 border-orange-300 text-orange-900'
-        }`}>
-          <div className="text-right">
-            <p className="text-[10px] font-mono uppercase font-bold text-slate-500">Confidence</p>
-            <p className="text-xs font-bold font-mono">{conf.level} ({conf.score}%)</p>
-          </div>
-          <div className="w-7 h-7 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-bold font-mono shadow-sm">
-            {conf.score}
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsGraphifyOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 text-indigo-300 hover:text-white hover:bg-slate-800 border border-slate-700 text-xs font-mono font-bold transition-all shadow-sm group"
+            title="Launch Graphify Knowledge Graph Visualizer"
+          >
+            <Network className="w-3.5 h-3.5 text-indigo-400 group-hover:animate-spin" />
+            <span>Graphify View</span>
+          </button>
+
+          {/* Confidence Badge */}
+          <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
+            isHighConf 
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
+              : 'bg-orange-50 border-orange-300 text-orange-900'
+          }`}>
+            <div className="text-right">
+              <p className="text-[10px] font-mono uppercase font-bold text-slate-500">Confidence</p>
+              <p className="text-xs font-bold font-mono">{conf.level} ({conf.score}%)</p>
+            </div>
+            <div className="w-7 h-7 rounded-full bg-emerald-700 text-white flex items-center justify-center text-xs font-bold font-mono shadow-sm">
+              {conf.score}
+            </div>
           </div>
         </div>
       </div>
+
 
       {/* Tabs Switcher */}
       <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4 text-xs font-medium">

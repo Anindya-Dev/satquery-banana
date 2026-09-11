@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:backend": "pytest",
+    "graphify": "graphify --help",
     "backend:start": "python -m uvicorn backend.main:app --reload --port 8000"
   },
   "dependencies": {

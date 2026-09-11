@@ -93,13 +93,22 @@ cp backend/.env.example backend/.env
 
 | Variable | Description | Default |
 |---|---|---|
+| `DEBUG` | Backend debug/reload mode. Use `False` on Render. Values like `release` are normalized to production mode. | `True` |
+| `HOST` | Backend host bind address | `0.0.0.0` |
+| `PORT` | Backend FastAPI port. Render provides this automatically. | `8000` |
 | `OPENAI_API_KEY` | OpenAI-compatible API key for VLM calls | `your_openai_api_key_here` |
 | `OPENAI_API_BASE` | Optional OpenAI-compatible API base URL, for providers such as NVIDIA NIM | empty |
 | `NVIDIA_API_KEY` | Optional NVIDIA API key; used automatically when `LITELLM_MODEL` points to an NVIDIA model | empty |
 | `NVIDIA_API_BASE_URL` | NVIDIA NIM OpenAI-compatible endpoint | `https://integrate.api.nvidia.com/v1` |
-| `LITELLM_MODEL` | LiteLLM model name, e.g. `gpt-4o-mini` or `openai/nvidia/nemotron-3.5-lightning-30b-a3b` | `gpt-4o-mini` |
+| `LITELLM_MODEL` | LiteLLM model name, e.g. `gpt-4o-mini` or `nvidia/nemotron-3.5-lightning-30b-a3b` | `gpt-4o-mini` |
 | `ALLOW_MOCK_FALLBACK` | Enable deterministic fallback when API key is unset | `True` |
-| `PORT` | Backend FastAPI Port | `8000` |
+| `STAC_API_URL` | Microsoft Planetary Computer STAC endpoint | `https://planetarycomputer.microsoft.com/api/stac/v1` |
+| `STAC_COLLECTION` | Default live optical collection | `sentinel-2-l2a` |
+| `STAC_SEARCH_LIMIT` | Maximum STAC candidates per search | `20` |
+| `PLANETARY_COMPUTER_SUBSCRIPTION_KEY` | Required only for Sentinel-1 RTC access; Sentinel-2 signing can work anonymously | empty |
+| `CORS_ORIGINS` | Comma-separated browser origins allowed to call the backend | `https://satquery-banana.vercel.app,http://localhost:3000` |
+| `NOMINATIM_USER_AGENT` | Contact identifier for public geocoding. Use a real email in deployment. | `SatQueryAI/1.0 (contact: your-email@example.com)` |
+| `DB_PATH` | SQLite metadata/job database path. Do not point this to `/var/data` on Render Free. | `backend/satquery_metadata.db` |
 | `VITE_API_BASE_URL` | Frontend API Target | `http://localhost:8000` |
 
 ### Live Data Scope
@@ -109,16 +118,53 @@ cp backend/.env.example backend/.env
 - The free public catalog has rate limits and only returns scenes that satisfy the cloud-quality threshold.
 - Live segmentation supports water and vegetation through measured Sentinel-2 spectral masks. Arbitrary objects still require high-resolution imagery and a dedicated model; Sentinel-1 RTC needs the configured subscription key.
 
-### Production Environment
+### Render + Vercel Demo Environment
 
-Set these in Render before enabling live traffic:
+For the current free Render backend and Vercel frontend, use this deployment setup.
 
-- `CORS_ORIGINS=https://satquery-banana.vercel.app` (add preview domains only when needed)
-- `NOMINATIM_USER_AGENT` with a real contact email for public place search
-- `PLANETARY_COMPUTER_SUBSCRIPTION_KEY` to enable Sentinel-1 RTC; Sentinel-2 remains public
-- a persistent disk mounted for `DB_PATH` if queued jobs and the response cache must survive Render restarts
+Render backend environment variables:
 
-Set `VITE_API_BASE_URL` in Vercel to the existing Render backend HTTPS URL. The UI sends explicit `bbox`, `start_date`, and `end_date` fields with each live request.
+```text
+DEBUG=False
+ALLOW_MOCK_FALLBACK=True
+MAX_ALLOWED_CLOUD_PERCENT=15.0
+CORS_ORIGINS=https://satquery-banana.vercel.app,http://localhost:3000
+NOMINATIM_USER_AGENT=SatQueryAI/1.0 (contact: your-email@example.com)
+NVIDIA_API_KEY=your_nvidia_api_key
+NVIDIA_API_BASE_URL=https://integrate.api.nvidia.com/v1
+LITELLM_MODEL=nvidia/nemotron-3.5-lightning-30b-a3b
+```
+
+Optional Render backend variables:
+
+```text
+PLANETARY_COMPUTER_SUBSCRIPTION_KEY=your_planetary_computer_key
+STAC_API_URL=https://planetarycomputer.microsoft.com/api/stac/v1
+STAC_COLLECTION=sentinel-2-l2a
+STAC_SEARCH_LIMIT=20
+```
+
+Do not set `DB_PATH=/var/data/satquery_metadata.db` on Render Free. Free Render web services do not support persistent disks, so `/var/data` will not exist unless the service is upgraded. On the free tier, the app uses its default SQLite path and job/cache state may reset after restart or redeploy.
+
+If the backend is upgraded to a paid Render instance, add a persistent disk mounted at `/var/data` and then set:
+
+```text
+DB_PATH=/var/data/satquery_metadata.db
+```
+
+Vercel frontend environment variable:
+
+```text
+VITE_API_BASE_URL=https://satquery-backend-x0fy.onrender.com
+```
+
+Do not append `/api/v1` or `/analyze`; the frontend adds API paths automatically.
+
+For the live backend-connected console, deploy the `frontend/` app or make sure the root Vercel app is wired to the same `VITE_API_BASE_URL` flow. The backend health check should be available at:
+
+```text
+https://satquery-backend-x0fy.onrender.com/api/v1/health
+```
 
 ### 3. Run Locally
 
@@ -166,13 +212,21 @@ The repository includes a pre-configured `vercel.json` for deployment:
 
 1. Push your repository to GitHub.
 2. Import the project in Vercel.
-3. Set the root directory to `./` (or `frontend/` if deploying as subfolder).
+3. Set the root directory to `frontend/` for the live backend-connected console.
 4. Build command: `npm run build`
 5. Output directory: `dist`
+6. Set `VITE_API_BASE_URL=https://satquery-backend-x0fy.onrender.com`.
 
 ### Production Cloud (Backend FastAPI)
 
-Run the backend via Uvicorn or Gunicorn with ASGI workers:
+Render backend settings:
+
+```text
+Build command: pip install -r backend/requirements.txt
+Start command: python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+For a non-Render production host, run the backend via Uvicorn or Gunicorn with ASGI workers:
 
 ```bash
 gunicorn backend.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000

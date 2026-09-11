@@ -21,6 +21,7 @@ from backend.app.specialists.grounding import GroundingSpecialist
 from backend.app.specialists.change_detection import ChangeDetectionSpecialist
 from backend.app.specialists.optical_sar_fusion import OpticalSARFusionSpecialist
 from backend.app.core.logging import logger
+from backend.app.core.exceptions import InsufficientEvidenceError
 
 class TaskRouter:
     def __init__(self, satellite_provider: Optional[SatelliteProvider] = None):

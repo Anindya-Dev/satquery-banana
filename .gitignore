@@ -74,3 +74,9 @@ docs/
 SatQuery-AI-Architecture.md
 SatQuery-AI-Engineering-Hardening-Report.md
 context.md
+
+# Agent & Knowledge Graph Tooling
+.agents/
+.commandcode/
+graphify-out/
+

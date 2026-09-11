@@ -120,3 +120,27 @@ def get_evaluator_scenarios() -> List[Dict[str, Any]]:
             "expected_confidence": 0.94
         }
     ]
+
+@router.post("/graphify")
+def export_graphify_knowledge_graph(request: Optional[AnalysisRequest] = None, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Generate Graphify Knowledge Graph JSON for satellite query evidence and topology."""
+    from backend.app.domain.graphify_exporter import GraphifyExporter
+
+    query_text = "Satellite Imagery Query Analysis"
+    analysis_dict = {}
+
+    if data and "nodes" in data and "edges" in data:
+        return data
+
+    if data:
+        analysis_dict = data
+        query_text = data.get("query_text", data.get("query", query_text))
+
+    if request:
+        query_text = request.query
+        result = task_router.process(request)
+        analysis_dict = result.model_dump(mode="json")
+
+    exporter = GraphifyExporter(query_text=query_text)
+    return exporter.export_analysis_graph(analysis_dict)
+

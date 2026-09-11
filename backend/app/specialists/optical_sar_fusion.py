@@ -4,6 +4,7 @@ from backend.app.specialists.base import BaseSpecialist
 from backend.app.domain.models import AnalysisRequest, GroundingMask, ChangeMapResult, SpectralIndices
 from backend.app.domain.evidence import EvidenceCollector
 from backend.app.geospatial.sar_ops import SAROps
+from backend.app.geospatial.raster_ops import RasterOps
 from backend.app.satellite.base import SatelliteProvider
 
 class OpticalSARFusionSpecialist(BaseSpecialist):
@@ -32,6 +33,38 @@ class OpticalSARFusionSpecialist(BaseSpecialist):
         mean_sigma0 = float(np.round(np.mean(sigma0_db), 2))
         water_mask_pct = float(np.round((np.sum(sigma0_db < -15.0) / sigma0_db.size) * 100.0, 2))
 
+        # Also compute optical spectral indices for cross-modal verification
+        try:
+            nir = prov.get_band_data(scene_id, "B8")
+            red = prov.get_band_data(scene_id, "B4")
+            green = prov.get_band_data(scene_id, "B3")
+            swir = prov.get_band_data(scene_id, "B11")
+            
+            ndvi_arr = RasterOps.calculate_ndvi(nir, red)
+            ndwi_arr = RasterOps.calculate_ndwi(green, nir)
+            ndbi_arr = RasterOps.calculate_ndbi(swir, nir)
+            
+            ndvi_stats = RasterOps.get_index_stats(ndvi_arr)
+            ndwi_stats = RasterOps.get_index_stats(ndwi_arr)
+            ndbi_stats = RasterOps.get_index_stats(ndbi_arr)
+            
+            spectral_indices = SpectralIndices(
+                ndvi_mean=ndvi_stats['mean'],
+                ndwi_mean=ndwi_stats['mean'],
+                ndbi_mean=ndbi_stats['mean']
+            )
+            
+            evidence_collector.add(
+                evidence_type="OpticalIndex",
+                layer=f"{prov.provider_name} [{scene_id}] B8/B4 NDVI",
+                description=f"Optical NDVI cross-verification: {ndvi_stats['mean']:.2f}",
+                metric_name="NDVI_mean",
+                metric_value=ndvi_stats['mean'],
+                unit="index [-1..1]"
+            )
+        except Exception:
+            spectral_indices = None
+
         evidence_collector.add(
             evidence_type="SpeckleFilter",
             layer=f"{prov.provider_name} [{scene_id}] C-Band VV Polarisation",
@@ -55,4 +88,4 @@ class OpticalSARFusionSpecialist(BaseSpecialist):
             f"Enhanced Lee 5x5 filtering confirmed {water_mask_pct}% water extent (Mean Sigma0: {mean_sigma0} dB)."
         )
 
-        return answer, [], None, None
+        return answer, [], None, spectral_indices
