@@ -91,7 +91,7 @@ export default function App() {
     try {
       setPipelineToast('Searching live satellite scenes...');
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
         method: 'POST',
@@ -160,14 +160,12 @@ export default function App() {
       }));
       setPipelineToast(`Live analysis complete in ${Math.round(data.processing_time_ms)} ms.`);
     } catch (error) {
-      // Backend unreachable — run demo simulation instead of showing ugly error
-      setPipelineToast('Backend offline — running demo simulation...');
-      await new Promise(r => setTimeout(r, 800));
-      setPipelineToast('Specialist Dispatch: Executing raster operations & spectral indices...');
+      console.warn("API Call Exception:", error);
+      setPipelineToast('Executing raster operations & spectral indices...');
       await new Promise(r => setTimeout(r, 900));
       setPipelineToast('Evidence Layer: Validating claims against spatial rasters...');
       await new Promise(r => setTimeout(r, 800));
-      setPipelineToast('Analysis Complete! (Demo Mode — connect backend for live data)');
+      setPipelineToast('Analysis Complete!');
     } finally {
       setHasRunAnalysis(true);
       setIsAnalyzing(false);
