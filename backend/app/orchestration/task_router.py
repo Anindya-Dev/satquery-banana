@@ -246,6 +246,12 @@ class TaskRouter:
             )
         )
 
+        bbox = request.bbox if (request.bbox and len(request.bbox) == 4) else [88.35, 22.68, 88.42, 22.73]
+        min_lon, min_lat, max_lon, max_lat = bbox[0], bbox[1], bbox[2], bbox[3]
+        
+        dynamic_primary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon},{min_lat},{max_lon},{max_lat}&bboxSR=4326&imageSR=4326&size=800,600&f=image"
+        dynamic_secondary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon-0.008},{min_lat-0.008},{max_lon+0.008},{max_lat+0.008}&bboxSR=4326&imageSR=4326&size=800,600&f=image" if task == TaskType.CHANGE_DETECTION else None
+
         return AnalysisResult(
             request_id=req_id,
             query=request.query,
@@ -254,8 +260,8 @@ class TaskRouter:
             summary_answer=summary,
             evidence_chain=evidence_items,
             confidence=conf,
-            image_primary_url="https://satquery-banana.vercel.app/assets/kolkata_coastal.png",
-            image_secondary_url="https://satquery-banana.vercel.app/assets/bitemporal_t2.png" if task == TaskType.CHANGE_DETECTION else None,
+            image_primary_url=dynamic_primary,
+            image_secondary_url=dynamic_secondary,
             scene_dates=["2024-02-10", "2024-08-15"],
             processing_time_ms=312.4
         )
