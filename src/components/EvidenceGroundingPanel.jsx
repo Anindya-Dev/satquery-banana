@@ -1,11 +1,32 @@
 import React, { useState } from 'react';
 import { ShieldCheck, CheckCircle2, AlertTriangle, Link as LinkIcon, FileText, Database, Layers, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 
-export default function EvidenceGroundingPanel({ scenario }) {
+export default function EvidenceGroundingPanel({ scenario, hasRunAnalysis, onRunAnalysis }) {
   const [activeTab, setActiveTab] = useState('ANSWER'); // ANSWER | EVIDENCE | GATES
   const [expandedEvidence, setExpandedEvidence] = useState(null);
 
   if (!scenario) return null;
+
+  if (!hasRunAnalysis) {
+    return (
+      <div className="glass-panel p-6 flex flex-col items-center justify-center text-center h-full border border-white/10 relative overflow-hidden min-h-[360px]">
+        <div className="p-4 rounded-2xl bg-amber-500/10 text-amber-400 mb-4 border border-amber-500/20 animate-pulse">
+          <ShieldCheck className="w-8 h-8" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-2 heading-font">Grounded Intelligence & Evidence</h3>
+        <p className="text-xs text-slate-400 max-w-xs leading-relaxed mb-6 font-sans">
+          Click <span className="text-amber-400 font-semibold font-mono">RUN GROUNDED ANALYSIS</span> to execute spatial raster telemetry, compute spectral indices, and extract evidence chains.
+        </p>
+        <button 
+          onClick={onRunAnalysis} 
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-xs font-bold font-mono transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
+        >
+          <Sparkles className="w-4 h-4" />
+          Run Grounded Analysis
+        </button>
+      </div>
+    );
+  }
 
   const conf = scenario.confidence;
   const isHighConf = conf.level === 'HIGH';

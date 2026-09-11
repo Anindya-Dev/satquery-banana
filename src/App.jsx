@@ -22,6 +22,7 @@ export default function App() {
   const [currentTask, setCurrentTask] = useState(DEMO_SCENARIOS[0].task);
   const [queryText, setQueryText] = useState(DEMO_SCENARIOS[0].query);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [hasRunAnalysis, setHasRunAnalysis] = useState(false);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [pipelineToast, setPipelineToast] = useState(null);
   const [analysisArea, setAnalysisArea] = useState({
@@ -36,6 +37,7 @@ export default function App() {
     const matchedScenario = DEMO_SCENARIOS.find(s => s.task === taskMode) || DEMO_SCENARIOS[0];
     setActiveScenario(matchedScenario);
     setQueryText(matchedScenario.query);
+    setHasRunAnalysis(true);
 
     // Scroll smoothly to platform section
     const elem = document.getElementById('platform');
@@ -47,6 +49,7 @@ export default function App() {
     setActiveScenario(scenario);
     setCurrentTask(scenario.task);
     setQueryText(scenario.query);
+    setHasRunAnalysis(true);
   };
 
   const handleRunAnalysis = async () => {
@@ -72,6 +75,7 @@ export default function App() {
         confidence: { level: 'LOW', score: 12, factors: { validPixels: '14.2%', cloudCoverage: '78.5%', spectralSanity: 'Failed', spatialMatch: 'Degraded' } },
         evidenceChain: [],
       }));
+      setHasRunAnalysis(true);
       setIsAnalyzing(false);
       setTimeout(() => setPipelineToast(null), 4000);
       return;
@@ -165,6 +169,7 @@ export default function App() {
       await new Promise(r => setTimeout(r, 800));
       setPipelineToast('Analysis Complete! (Demo Mode — connect backend for live data)');
     } finally {
+      setHasRunAnalysis(true);
       setIsAnalyzing(false);
       setTimeout(() => setPipelineToast(null), 5000);
     }
@@ -228,7 +233,11 @@ export default function App() {
 
           {/* Right: Evidence & Grounding Panel */}
           <div className="lg:col-span-5 flex flex-col">
-            <EvidenceGroundingPanel scenario={activeScenario} />
+            <EvidenceGroundingPanel 
+              scenario={activeScenario} 
+              hasRunAnalysis={hasRunAnalysis}
+              onRunAnalysis={handleRunAnalysis}
+            />
           </div>
         </div>
       </section>
