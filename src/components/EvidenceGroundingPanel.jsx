@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
-import { ShieldCheck, CheckCircle2, AlertTriangle, Link as LinkIcon, FileText, Database, Layers, Sparkles, ChevronDown, ChevronUp, Lock, Network } from 'lucide-react';
-import GraphifyModal from './GraphifyModal';
+import { ShieldCheck, CheckCircle2, AlertTriangle, Link as LinkIcon, FileText, Database, Layers, Sparkles, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 
 export default function EvidenceGroundingPanel({ scenario }) {
   const [activeTab, setActiveTab] = useState('ANSWER'); // ANSWER | EVIDENCE | GATES
   const [expandedEvidence, setExpandedEvidence] = useState(null);
-  const [isGraphifyOpen, setIsGraphifyOpen] = useState(false);
 
   if (!scenario) return null;
 
@@ -15,13 +13,6 @@ export default function EvidenceGroundingPanel({ scenario }) {
   return (
     <div className="glass-panel p-4 flex flex-col h-full border border-white/10 relative overflow-hidden">
       
-      {/* Graphify Modal Container */}
-      <GraphifyModal 
-        isOpen={isGraphifyOpen} 
-        onClose={() => setIsGraphifyOpen(false)} 
-        scenarioData={scenario}
-      />
-
       {/* Panel Header */}
       <div className="flex items-center justify-between pb-3 mb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
@@ -34,30 +25,18 @@ export default function EvidenceGroundingPanel({ scenario }) {
           </div>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsGraphifyOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 text-indigo-300 hover:text-white hover:bg-slate-800 border border-slate-700 text-xs font-mono font-bold transition-all shadow-sm group"
-            title="Launch Graphify Knowledge Graph Visualizer"
-          >
-            <Network className="w-3.5 h-3.5 text-indigo-400 group-hover:animate-spin" />
-            <span>Graphify View</span>
-          </button>
-
-          {/* Confidence Gauge Badge */}
-          <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
-            isHighConf 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-              : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-          }`}>
-            <div className="text-right">
-              <p className="text-[10px] font-mono uppercase text-slate-400">Confidence</p>
-              <p className="text-xs font-bold font-mono">{conf.level} ({conf.score}%)</p>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center border border-white/10 text-xs font-bold font-mono text-emerald-400">
-              {conf.score}
-            </div>
+        {/* Confidence Gauge Badge */}
+        <div className={`px-3 py-1.5 rounded-xl border flex items-center gap-2 ${
+          isHighConf 
+            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+            : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+        }`}>
+          <div className="text-right">
+            <p className="text-[10px] font-mono uppercase text-slate-400">Confidence</p>
+            <p className="text-xs font-bold font-mono">{conf.level} ({conf.score}%)</p>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center border border-white/10 text-xs font-bold font-mono text-emerald-400">
+            {conf.score}
           </div>
         </div>
       </div>
