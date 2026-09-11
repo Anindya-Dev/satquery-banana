@@ -36,13 +36,15 @@ async def rate_limit_requests(request: Request, call_next):
 # Register domain exception handlers
 register_exception_handlers(app)
 
-# Set up CORS middleware
+# Set up CORS middleware — allow all origins for hackathon demo
+cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()],
+    allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app" if "*" not in cors_origins else None,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "Accept"],
 )
 
 # Include API v1 router
