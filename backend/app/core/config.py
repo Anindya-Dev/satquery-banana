@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "*"
     API_RATE_LIMIT_PER_MINUTE: int = 20
     RESPONSE_CACHE_TTL_SECONDS: int = 900
-    NOMINATIM_USER_AGENT: str = "SatQueryAI/1.0 (contact: admin@example.com)"
+    NOMINATIM_USER_AGENT: str = "SatQueryAI-Research-SIH2026/1.0 (contact: anindya.research@gmail.com)"
     NOMINATIM_MIN_INTERVAL_SECONDS: float = 1.1
     
     # Storage & Database Paths

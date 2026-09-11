@@ -98,10 +98,10 @@ export default function HeroQueryCenter({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <input value={analysisArea.bbox} onChange={(event) => setAnalysisArea({ ...analysisArea, bbox: event.target.value })} aria-label="Area of interest bounding box" placeholder="minLon,minLat,maxLon,maxLat" className="sm:col-span-3 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500" />
+              <input value={analysisArea.bbox} onChange={(event) => setAnalysisArea({ ...analysisArea, bbox: event.target.value })} aria-label="Area of interest location or bounding box" placeholder="Location name (e.g. Jaipur, Kochi, Varanasi) or minLon,minLat,maxLon,maxLat" className="sm:col-span-3 bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500" />
               <input value={analysisArea.startDate} onChange={(event) => setAnalysisArea({ ...analysisArea, startDate: event.target.value })} aria-label="Start date" placeholder="Start date, ISO-8601" className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500" />
               <input value={analysisArea.endDate} onChange={(event) => setAnalysisArea({ ...analysisArea, endDate: event.target.value })} aria-label="End date" placeholder="End date, ISO-8601" className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 focus:outline-none focus:border-orange-500" />
-              <span className="text-[10px] text-slate-500 font-mono self-center">AOI uses EPSG:4326 lon/lat.</span>
+              <span className="text-[10px] text-slate-500 font-mono self-center">Auto-geocodes any city or accepts EPSG:4326.</span>
             </div>
 
             {/* Quick Prompt Suggestions */}
