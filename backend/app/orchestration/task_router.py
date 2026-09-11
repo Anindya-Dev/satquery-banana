@@ -148,6 +148,14 @@ class TaskRouter:
         primary_preview = preview_provider.get_rgb_preview(sample_img.id) if preview_provider else None
         secondary_preview = preview_provider.get_rgb_preview(comparison_img.id) if preview_provider and comparison_img else None
 
+        bbox = request.bbox if (request.bbox and len(request.bbox) == 4) else [88.35, 22.68, 88.42, 22.73]
+        min_lon, min_lat, max_lon, max_lat = bbox[0], bbox[1], bbox[2], bbox[3]
+        dynamic_primary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon},{min_lat},{max_lon},{max_lat}&bboxSR=4326&imageSR=4326&size=800,600&f=image"
+        dynamic_secondary = f"https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox={min_lon-0.008},{min_lat-0.008},{max_lon+0.008},{max_lat+0.008}&bboxSR=4326&imageSR=4326&size=800,600&f=image" if task_type == TaskType.CHANGE_DETECTION else None
+
+        primary_preview = primary_preview or dynamic_primary
+        secondary_preview = secondary_preview or dynamic_secondary
+
         # Layer 12: Final Grounded Response Sanitization
         return AnalysisResult(
             request_id=req_id,
