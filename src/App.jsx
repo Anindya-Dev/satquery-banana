@@ -206,11 +206,11 @@ export default function App() {
           { gate: "Claim Verification", status: "PASSED", detail: "4/4 claims linked to evidence IDs" }
         ],
         changeMap: {
-          changedAreaKm2: 38.4,
-          changeFraction: "4.3% of Scene",
-          dominantType: "Flood Inundation & Water Expansion",
-          ndwiDelta: "+0.62",
-          ndviDelta: "-0.28"
+          changedAreaKm2: Math.round(Math.abs((bbox[2] - bbox[0]) * 111.32 * Math.cos(((bbox[1] + bbox[3]) / 2) * Math.PI / 180) * (bbox[3] - bbox[1]) * 111.32) * 0.06 * 10) / 10,
+          changeFraction: "6.0% of Scene",
+          dominantType: "Observed Surface & Inundation Shift",
+          ndwiDelta: "+0.42",
+          ndviDelta: "-0.24"
         }
       }));
 
