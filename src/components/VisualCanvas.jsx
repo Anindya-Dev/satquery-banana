@@ -131,7 +131,7 @@ export default function VisualCanvas({ scenario }) {
               className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             />
             <div className="absolute top-3 right-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-amber-300 pointer-events-none">
-              T2: 2024-09-10 (After Inundation)
+              T2: {scenario.endDate || (scenario.sceneDates?.[1]) || 'Post-Event Acquisition'}
             </div>
 
             {/* T1 Image (Before / Left) - Overflow Clipped Wrapper */}
@@ -146,7 +146,7 @@ export default function VisualCanvas({ scenario }) {
                 style={{ width: containerWidth ? `${containerWidth}px` : '100%' }}
               />
               <div className="absolute top-3 left-3 z-10 px-2.5 py-1 rounded-md bg-slate-950/80 backdrop-blur border border-white/10 text-[11px] font-mono text-slate-200 pointer-events-none whitespace-nowrap">
-                T1: 2023-09-10 (Baseline)
+                T1: {scenario.startDate || (scenario.sceneDates?.[0]) || 'Pre-Event Acquisition'}
               </div>
             </div>
 
