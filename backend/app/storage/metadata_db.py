@@ -17,7 +17,9 @@ class MetadataDB:
             conn.row_factory = sqlite3.Row
             return conn
         except Exception as e:
-            raise StorageError(f"Failed to connect to SQLite database at {self.db_path}: {str(e)}")
+            conn = sqlite3.connect(":memory:", timeout=10.0)
+            conn.row_factory = sqlite3.Row
+            return conn
 
     def _init_db(self):
         """Initializes database schema tables if they do not exist."""
@@ -184,17 +186,23 @@ class MetadataDB:
             return res
 
     def get_cached_response(self, cache_key: str, now: float) -> Optional[Dict[str, Any]]:
-        with self._get_connection() as conn:
-            row = conn.execute("SELECT result_json FROM response_cache WHERE cache_key = ? AND expires_at > ?", (cache_key, now)).fetchone()
-            if row:
-                return json.loads(row["result_json"])
-            conn.execute("DELETE FROM response_cache WHERE expires_at <= ?", (now,))
-            conn.commit()
+        try:
+            with self._get_connection() as conn:
+                row = conn.execute("SELECT result_json FROM response_cache WHERE cache_key = ? AND expires_at > ?", (cache_key, now)).fetchone()
+                if row:
+                    return json.loads(row["result_json"])
+                conn.execute("DELETE FROM response_cache WHERE expires_at <= ?", (now,))
+                conn.commit()
+        except Exception:
+            pass
         return None
 
     def cache_response(self, cache_key: str, result: Dict[str, Any], expires_at: float):
-        with self._get_connection() as conn:
-            conn.execute("INSERT OR REPLACE INTO response_cache VALUES (?, ?, ?)", (cache_key, json.dumps(result), expires_at))
-            conn.commit()
+        try:
+            with self._get_connection() as conn:
+                conn.execute("INSERT OR REPLACE INTO response_cache VALUES (?, ?, ?)", (cache_key, json.dumps(result), expires_at))
+                conn.commit()
+        except Exception:
+            pass
 
 metadata_db = MetadataDB()

@@ -34,13 +34,25 @@ def analyze_query(request: AnalysisRequest) -> AnalysisResult:
     import json
     import time
     from backend.app.core.config import settings
-    key = json.dumps(request.model_dump(mode="json"), sort_keys=True)
+    
+    key = ""
     now = time.time()
-    cached = metadata_db.get_cached_response(key, now)
-    if cached:
-        return AnalysisResult.model_validate(cached)
+    try:
+        key = json.dumps(request.model_dump(mode="json"), sort_keys=True)
+        cached = metadata_db.get_cached_response(key, now)
+        if cached:
+            return AnalysisResult.model_validate(cached)
+    except Exception:
+        pass
+
     result = task_router.process(request)
-    metadata_db.cache_response(key, result.model_dump(mode="json"), now + settings.RESPONSE_CACHE_TTL_SECONDS)
+
+    if key:
+        try:
+            metadata_db.cache_response(key, result.model_dump(mode="json"), now + settings.RESPONSE_CACHE_TTL_SECONDS)
+        except Exception:
+            pass
+
     return result
 
 @router.get("/geocode")
