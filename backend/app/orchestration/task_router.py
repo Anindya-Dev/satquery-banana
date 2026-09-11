@@ -254,6 +254,8 @@ class TaskRouter:
             summary_answer=summary,
             evidence_chain=evidence_items,
             confidence=conf,
+            image_primary_url="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&auto=format&fit=crop",
+            image_secondary_url="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&auto=format&fit=crop" if task == TaskType.CHANGE_DETECTION else None,
             scene_dates=["2024-02-10", "2024-08-15"],
             processing_time_ms=312.4
         )
