@@ -57,7 +57,38 @@ def analyze_query(request: AnalysisRequest) -> AnalysisResult:
 
 @router.get("/geocode")
 def geocode_place(q: str) -> List[Dict[str, object]]:
-    return Geocoder.search(q)
+    import re
+    from backend.app.geospatial.geocoder import KNOWN_GEOLOCATIONS
+    q_str = q.strip()
+    q_lower = q_str.lower()
+
+    # 1. Direct search in KNOWN_GEOLOCATIONS for whole word matches
+    for key, bbox in KNOWN_GEOLOCATIONS.items():
+        if re.search(r'\b' + re.escape(key) + r'\b', q_lower):
+            return [{"name": f"{key.title()}, India", "bbox": bbox}]
+
+    # 2. Extract location candidate after prepositions (e.g. "in Kochi", "near Jaipur", "around Varanasi")
+    match = re.search(r'\b(?:in|at|near|around|across|for|of)\s+([A-Za-z\s]+)', q_str, re.I)
+    candidate = match.group(1).strip() if match else q_str
+    candidate_lower = candidate.lower()
+
+    for key, bbox in KNOWN_GEOLOCATIONS.items():
+        if key in candidate_lower:
+            return [{"name": f"{key.title()}, India", "bbox": bbox}]
+
+    # 3. Live search candidate with Geocoder
+    try:
+        results = Geocoder.search(candidate)
+        if results:
+            return results
+    except Exception:
+        pass
+
+    # 4. Fallback search raw query
+    try:
+        return Geocoder.search(q_str)
+    except Exception:
+        return []
 
 @router.post("/jobs")
 def submit_analysis_job(request: AnalysisRequest) -> Dict[str, Any]:

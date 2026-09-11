@@ -60,32 +60,74 @@ export default function App() {
     let bbox = analysisArea.bbox ? analysisArea.bbox.split(',').map(s => Number(s.trim())) : [];
     let resolvedName = '';
 
-    // Check if user entered a place name (like "Jaipur", "Kochi", "Varanasi") instead of 4 numbers,
-    // or if the query contains a place name.
+    // Check if user entered 4 explicit valid numbers
     const isExplicitBbox = bbox.length === 4 && !bbox.some(Number.isNaN) &&
       bbox[0] >= -180 && bbox[0] <= 180 && bbox[1] >= -90 && bbox[1] <= 90;
 
     if (!isExplicitBbox) {
-      const placeQuery = (analysisArea.bbox && isNaN(Number(analysisArea.bbox.split(',')[0])))
-        ? analysisArea.bbox.trim()
-        : queryToUse;
+      // 1. Instant client-side lookup for prominent Indian cities & states (0ms latency, 100% reliable)
+      const KNOWN_CLIENT_CITIES = {
+        'kochi': [76.084, 9.808, 76.404, 10.128],
+        'jaipur': [75.658, 26.755, 75.978, 27.075],
+        'varanasi': [82.900, 25.200, 83.100, 25.400],
+        'dehradun': [77.880, 30.165, 78.204, 30.485],
+        'delhi': [77.080, 28.540, 77.200, 28.650],
+        'mumbai': [72.750, 18.900, 73.200, 19.300],
+        'kolkata': [88.214, 22.451, 88.482, 22.689],
+        'chennai': [80.200, 13.000, 80.400, 13.200],
+        'bangalore': [77.400, 12.800, 77.700, 13.200],
+        'bengaluru': [77.400, 12.800, 77.700, 13.200],
+        'hyderabad': [78.300, 17.200, 78.600, 17.500],
+        'ahmedabad': [72.400, 22.900, 72.600, 23.100],
+        'pune': [73.700, 18.400, 74.000, 18.700],
+        'sivasagar': [94.479, 26.823, 94.799, 27.143],
+        'sibsagar': [94.479, 26.823, 94.799, 27.143],
+        'guwahati': [91.500, 26.100, 91.700, 26.300],
+        'assam': [89.500, 24.500, 96.500, 28.000],
+        'kerala': [74.864, 8.293, 77.412, 12.796],
+        'patna': [85.000, 25.500, 85.200, 25.700],
+        'bhopal': [77.400, 23.200, 77.600, 23.400],
+        'lucknow': [80.900, 26.800, 81.100, 27.000],
+        'chandigarh': [76.700, 30.680, 76.850, 30.790],
+        'shimla': [77.100, 31.050, 77.250, 31.150],
+        'srinagar': [74.700, 34.000, 74.950, 34.150]
+      };
 
-      try {
-        setPipelineToast(`Resolving coordinates for '${placeQuery}'...`);
-        const geoRes = await fetch(`${API_BASE_URL}/api/v1/geocode?q=${encodeURIComponent(placeQuery)}`);
-        if (geoRes.ok) {
-          const geoData = await geoRes.json();
-          if (geoData && geoData.length > 0 && geoData[0].bbox) {
-            bbox = geoData[0].bbox;
-            resolvedName = geoData[0].name ? geoData[0].name.split(',')[0] : placeQuery;
-            setAnalysisArea(prev => ({
-              ...prev,
-              bbox: bbox.map(n => Number(n).toFixed(4)).join(', ')
-            }));
-          }
+      const combinedText = `${analysisArea.bbox || ''} ${queryToUse}`.toLowerCase();
+      const foundCity = Object.keys(KNOWN_CLIENT_CITIES).find(city => combinedText.includes(city));
+
+      if (foundCity) {
+        bbox = KNOWN_CLIENT_CITIES[foundCity];
+        resolvedName = foundCity.charAt(0).toUpperCase() + foundCity.slice(1);
+        setAnalysisArea(prev => ({
+          ...prev,
+          bbox: bbox.map(n => Number(n).toFixed(4)).join(', ')
+        }));
+      } else {
+        // 2. Fallback to live backend geocoding service
+        let placeQuery = analysisArea.bbox?.trim() || '';
+        if (!placeQuery || !isNaN(Number(placeQuery.split(',')[0]))) {
+          const prepMatch = queryToUse.match(/\b(?:in|at|near|around|across|for|of)\s+([A-Za-z\s]+)/i);
+          placeQuery = prepMatch ? prepMatch[1].trim() : queryToUse;
         }
-      } catch (err) {
-        console.warn('Geocoding resolution fallback:', err);
+
+        try {
+          setPipelineToast(`Resolving coordinates for '${placeQuery}'...`);
+          const geoRes = await fetch(`${API_BASE_URL}/api/v1/geocode?q=${encodeURIComponent(placeQuery)}`);
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            if (geoData && geoData.length > 0 && geoData[0].bbox) {
+              bbox = geoData[0].bbox;
+              resolvedName = geoData[0].name ? geoData[0].name.split(',')[0] : placeQuery;
+              setAnalysisArea(prev => ({
+                ...prev,
+                bbox: bbox.map(n => Number(n).toFixed(4)).join(', ')
+              }));
+            }
+          }
+        } catch (err) {
+          console.warn('Geocoding resolution fallback:', err);
+        }
       }
     }
 
